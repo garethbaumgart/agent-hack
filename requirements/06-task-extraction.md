@@ -13,6 +13,13 @@
 - [ ] Task inherits all labels from the note
 - [ ] Task links back to the source note
 - [ ] Task appears in Todo column on Board View
+- [ ] Checkboxes are visually distinct (accent color, standout styling) to indicate they are tracked tasks
+
+### Technical Notes
+
+- Any checkbox created via toolbar, markdown `- [ ]`, or `/task` slash command creates a task
+- All checkboxes in notes are tasks - no distinction between "regular" and "task" checkboxes
+- `/task` is an optional shortcut that inserts a checkbox
 
 ---
 
@@ -78,3 +85,64 @@
 ### Acceptance Criteria
 
 - [ ] When checkbox text is changed in the note editor, the linked task title is updated on save
+
+---
+
+## US-26: Create Task via Slash Command
+
+**As an** engineering manager
+**I want** to type `/task` to quickly insert a task checkbox
+**So that** I can add action items without leaving the keyboard
+
+### Acceptance Criteria
+
+- [ ] Typing `/task` in the note editor inserts a checkbox at the cursor position
+- [ ] User can immediately type the task title inline
+- [ ] Task is created when the note is saved (same as any other checkbox)
+- [ ] Slash command works anywhere in the note content
+
+### Technical Notes
+
+- This is a convenience shortcut - functionally identical to inserting a checkbox via toolbar
+- Tiptap supports slash commands via the Suggestion extension
+- Future: Could expand to `/task Buy milk @tomorrow #shopping` for inline due dates and labels
+
+---
+
+## US-27: Set Task Due Date from Note
+
+**As an** engineering manager
+**I want** to set a due date on a task directly from the note
+**So that** I can prioritize without switching to the board
+
+### Acceptance Criteria
+
+- [ ] User can set a due date on a task checkbox in the note editor
+- [ ] Due date is displayed next to the checkbox (subtle, non-intrusive)
+- [ ] Due date syncs with the task on the board
+- [ ] User can change or remove the due date from the note
+
+### Technical Notes
+
+- UI option: Click on checkbox to reveal task details popover (due date, labels, link to board)
+- Alternative: Inline date picker icon next to checkbox
+- Due date changes saved when note is saved
+
+---
+
+## US-28: View Task Labels from Note
+
+**As an** engineering manager
+**I want** to see which labels are on a task directly in the note
+**So that** I have full context without leaving the editor
+
+### Acceptance Criteria
+
+- [ ] Task checkboxes display their labels (small chips/tags)
+- [ ] Labels are inherited from the note by default
+- [ ] Labels stay in sync with the task on the board
+
+### Technical Notes
+
+- Labels shown inline after checkbox text or below it
+- Read-only display in MVP - editing labels on individual tasks deferred to future story

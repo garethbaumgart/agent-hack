@@ -75,23 +75,30 @@ import { type Task } from '../../models/task.model';
                         class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
                       <div class="flex-1 min-w-0 pr-4">
-                        @if (editingTaskId() === task.id) {
-                          <input
-                            type="text"
-                            [value]="editingTitle()"
-                            (input)="onEditInput($event)"
-                            (keyup.enter)="saveEdit(task)"
-                            (keyup.escape)="cancelEdit()"
-                            (blur)="saveEdit(task)"
-                            class="w-full text-sm text-gray-900 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
-                            #editInput
-                          />
-                        } @else {
-                          <p
-                            class="text-sm text-gray-900 cursor-pointer hover:text-gray-600"
-                            (click)="startEdit(task)"
-                          >{{ task.title }}</p>
-                        }
+                        <div class="flex items-center gap-1">
+                          @if (task.noteId) {
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="From note">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                            </svg>
+                          }
+                          @if (editingTaskId() === task.id) {
+                            <input
+                              type="text"
+                              [value]="editingTitle()"
+                              (input)="onEditInput($event)"
+                              (keyup.enter)="saveEdit(task)"
+                              (keyup.escape)="cancelEdit()"
+                              (blur)="saveEdit(task)"
+                              class="w-full text-sm text-gray-900 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                              #editInput
+                            />
+                          } @else {
+                            <p
+                              class="text-sm text-gray-900 cursor-pointer hover:text-gray-600"
+                              (click)="startEdit(task)"
+                            >{{ task.title }}</p>
+                          }
+                        </div>
                         <div class="flex items-center gap-2 mt-1">
                           <p class="text-xs text-gray-400">
                             {{ formatDate(task.createdAt) }}
@@ -205,22 +212,29 @@ import { type Task } from '../../models/task.model';
                         class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
                       <div class="flex-1 min-w-0 pr-4">
-                        @if (editingTaskId() === task.id) {
-                          <input
-                            type="text"
-                            [value]="editingTitle()"
-                            (input)="onEditInput($event)"
-                            (keyup.enter)="saveEdit(task)"
-                            (keyup.escape)="cancelEdit()"
-                            (blur)="saveEdit(task)"
-                            class="w-full text-sm text-gray-500 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
-                          />
-                        } @else {
-                          <p
-                            class="text-sm text-gray-500 line-through cursor-pointer hover:text-gray-400"
-                            (click)="startEdit(task)"
-                          >{{ task.title }}</p>
-                        }
+                        <div class="flex items-center gap-1">
+                          @if (task.noteId) {
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="From note">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                            </svg>
+                          }
+                          @if (editingTaskId() === task.id) {
+                            <input
+                              type="text"
+                              [value]="editingTitle()"
+                              (input)="onEditInput($event)"
+                              (keyup.enter)="saveEdit(task)"
+                              (keyup.escape)="cancelEdit()"
+                              (blur)="saveEdit(task)"
+                              class="w-full text-sm text-gray-500 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                            />
+                          } @else {
+                            <p
+                              class="text-sm text-gray-500 line-through cursor-pointer hover:text-gray-400"
+                              (click)="startEdit(task)"
+                            >{{ task.title }}</p>
+                          }
+                        </div>
                         <p class="text-xs text-gray-400 mt-1">
                           {{ formatDate(task.completedAt!) }}
                         </p>

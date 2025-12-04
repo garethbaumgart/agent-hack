@@ -61,6 +61,16 @@ export class TaskService {
   }
 
   getDoneTasks(): Task[] {
-    return this.tasksSignal().filter(t => t.status === 'done');
+    return this.tasksSignal()
+      .filter(t => t.status === 'done')
+      .sort((a, b) => {
+        // Sort by completed_at (most recent first)
+        if (a.completedAt && b.completedAt) {
+          return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+        }
+        if (a.completedAt) return -1;
+        if (b.completedAt) return 1;
+        return 0;
+      });
   }
 }
