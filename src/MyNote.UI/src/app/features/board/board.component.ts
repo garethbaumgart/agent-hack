@@ -14,8 +14,31 @@ import { type Task } from '../../models/task.model';
     <div class="h-full bg-gray-50">
       <!-- Header -->
       <header class="bg-white border-b border-gray-200">
-        <div class="px-8 py-6">
+        <div class="px-8 py-6 flex items-center justify-between">
           <h1 class="text-2xl font-semibold text-gray-900">Board</h1>
+
+          <!-- Label Filter -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">Filter by label:</span>
+            <select
+              [ngModel]="selectedLabelFilter()"
+              (ngModelChange)="setLabelFilter($event)"
+              class="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            >
+              <option value="">All tasks</option>
+              @for (label of labelService.labels(); track label.id) {
+                <option [value]="label.id">{{ label.name }}</option>
+              }
+            </select>
+            @if (selectedLabelFilter()) {
+              <button
+                (click)="clearLabelFilter()"
+                class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1"
+              >
+                Clear
+              </button>
+            }
+          </div>
         </div>
       </header>
 
@@ -271,7 +294,7 @@ import { type Task } from '../../models/task.model';
 })
 export class BoardComponent implements OnInit {
   private readonly taskService = inject(TaskService);
-  private readonly labelService = inject(LabelService);
+  readonly labelService = inject(LabelService);
   private readonly router = inject(Router);
 
   newTaskTitle = signal('');
@@ -280,9 +303,21 @@ export class BoardComponent implements OnInit {
   editingDueDateTaskId = signal<string | null>(null);
   editingLabelTaskId = signal<string | null>(null);
   labelSearchTerm = signal('');
+  selectedLabelFilter = signal<string>('');
 
-  todoTasks = () => this.taskService.getTodoTasks();
-  doneTasks = () => this.taskService.getDoneTasks();
+  todoTasks = computed(() => {
+    const filter = this.selectedLabelFilter();
+    const tasks = this.taskService.getTodoTasks();
+    if (!filter) return tasks;
+    return tasks.filter(t => t.labels.some(l => l.id === filter));
+  });
+
+  doneTasks = computed(() => {
+    const filter = this.selectedLabelFilter();
+    const tasks = this.taskService.getDoneTasks();
+    if (!filter) return tasks;
+    return tasks.filter(t => t.labels.some(l => l.id === filter));
+  });
 
   filteredLabels = computed(() => {
     const searchTerm = this.labelSearchTerm().toLowerCase();
@@ -441,5 +476,13 @@ export class BoardComponent implements OnInit {
 
   navigateToNote(noteId: string): void {
     this.router.navigate(['/notes', noteId]);
+  }
+
+  setLabelFilter(labelId: string): void {
+    this.selectedLabelFilter.set(labelId);
+  }
+
+  clearLabelFilter(): void {
+    this.selectedLabelFilter.set('');
   }
 }
