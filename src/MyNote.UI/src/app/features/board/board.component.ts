@@ -65,7 +65,23 @@ import { type Task } from '../../models/task.model';
                         class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
                       <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-900">{{ task.title }}</p>
+                        @if (editingTaskId() === task.id) {
+                          <input
+                            type="text"
+                            [value]="editingTitle()"
+                            (input)="onEditInput($event)"
+                            (keyup.enter)="saveEdit(task)"
+                            (keyup.escape)="cancelEdit()"
+                            (blur)="saveEdit(task)"
+                            class="w-full text-sm text-gray-900 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                            #editInput
+                          />
+                        } @else {
+                          <p
+                            class="text-sm text-gray-900 cursor-pointer hover:text-gray-600"
+                            (click)="startEdit(task)"
+                          >{{ task.title }}</p>
+                        }
                         <p class="text-xs text-gray-400 mt-1">
                           {{ formatDate(task.createdAt) }}
                         </p>
@@ -104,7 +120,22 @@ import { type Task } from '../../models/task.model';
                         class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
                       <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-500 line-through">{{ task.title }}</p>
+                        @if (editingTaskId() === task.id) {
+                          <input
+                            type="text"
+                            [value]="editingTitle()"
+                            (input)="onEditInput($event)"
+                            (keyup.enter)="saveEdit(task)"
+                            (keyup.escape)="cancelEdit()"
+                            (blur)="saveEdit(task)"
+                            class="w-full text-sm text-gray-500 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                          />
+                        } @else {
+                          <p
+                            class="text-sm text-gray-500 line-through cursor-pointer hover:text-gray-400"
+                            (click)="startEdit(task)"
+                          >{{ task.title }}</p>
+                        }
                         <p class="text-xs text-gray-400 mt-1">
                           {{ formatDate(task.completedAt!) }}
                         </p>
@@ -130,6 +161,8 @@ export class BoardComponent implements OnInit {
   private readonly taskService = inject(TaskService);
 
   newTaskTitle = signal('');
+  editingTaskId = signal<string | null>(null);
+  editingTitle = signal('');
 
   todoTasks = () => this.taskService.getTodoTasks();
   doneTasks = () => this.taskService.getDoneTasks();
@@ -149,6 +182,29 @@ export class BoardComponent implements OnInit {
   async toggleTaskStatus(task: Task): Promise<void> {
     const newStatus = task.status === 'todo' ? 'done' : 'todo';
     await this.taskService.updateTaskStatus(task.id, newStatus);
+  }
+
+  startEdit(task: Task): void {
+    this.editingTaskId.set(task.id);
+    this.editingTitle.set(task.title);
+  }
+
+  onEditInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.editingTitle.set(input.value);
+  }
+
+  async saveEdit(task: Task): Promise<void> {
+    const newTitle = this.editingTitle().trim();
+    if (newTitle && newTitle !== task.title) {
+      await this.taskService.updateTaskTitle(task.id, newTitle);
+    }
+    this.cancelEdit();
+  }
+
+  cancelEdit(): void {
+    this.editingTaskId.set(null);
+    this.editingTitle.set('');
   }
 
   formatDate(dateStr: string): string {

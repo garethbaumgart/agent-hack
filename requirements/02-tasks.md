@@ -73,6 +73,12 @@
 - [ ] User can edit task title from the Board View
 - [ ] If task is linked to a note, the checkbox text in the note is updated
 
+### Technical Notes
+- Click on task title to turn it into inline text input
+- Enter or blur to save, Escape to cancel
+- PUT /api/tasks/{id} endpoint with { title: "new title" }
+- Note checkbox sync deferred until note-task linking is implemented
+
 ---
 
 ## US-09: Set Task Due Date

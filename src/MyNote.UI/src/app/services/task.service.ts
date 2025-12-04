@@ -28,6 +28,12 @@ export class TaskService {
     return task;
   }
 
+  async updateTaskTitle(id: string, title: string): Promise<Task> {
+    const task = await firstValueFrom(this.http.put<Task>(`${this.apiUrl}/${id}`, { title }));
+    this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? task : t));
+    return task;
+  }
+
   getTodoTasks(): Task[] {
     return this.tasksSignal().filter(t => t.status === 'todo');
   }
