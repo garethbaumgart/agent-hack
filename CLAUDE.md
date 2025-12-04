@@ -10,9 +10,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. CLARIFY     → Ask questions before starting (see below)
 2. UNDERSTAND  → What problem? Who uses it? (load domain.md)
 3. DESIGN      → How should it work? (load architecture.md)
-4. BUILD       → Database → API → UI (reference quality.md)
-5. VALIDATE    → Does it work? Does it meet the need?
+4. BUILD       → Database → API + Unit Tests → UI (reference quality.md)
+5. TEST        → Run tests, verify coverage (90% backend, 80% frontend)
+6. VALIDATE    → Does it work? Does it meet the need?
 ```
+
+**Critical: When implementing API/backend changes, ALWAYS generate unit tests:**
+- Write tests for commands, queries, and validators
+- Target 90% coverage for business logic (reference quality.md)
+- Follow xUnit patterns with Arrange/Act/Assert structure
+- Tests are NOT optional - they're part of the implementation
 
 **Before executing on a user story or requirement, always ask clarifying questions:**
 
@@ -30,9 +37,15 @@ Do NOT start implementation until the user has answered your questions or confir
 ```
 1. REPRODUCE   → Confirm the issue
 2. DIAGNOSE    → Find root cause
-3. FIX         → Implement solution
-4. TEST        → Verify fix, check for regressions
+3. FIX         → Implement solution + Add/update unit tests
+4. TEST        → Verify fix, check for regressions, ensure tests fail without fix
+5. VALIDATE    → Confirm fix solves original issue
 ```
+
+**For backend/API bug fixes, always add a unit test that:**
+- Reproduces the bug (test should fail before fix)
+- Passes after the fix is applied
+- Prevents regression
 
 ### For Performance Issues
 
@@ -42,6 +55,55 @@ Do NOT start implementation until the user has answered your questions or confir
 3. OPTIMIZE    → Apply targeted fixes
 4. VERIFY      → Confirm improvement
 ```
+
+## Test Requirements
+
+**Unit tests are mandatory for all API and backend changes.**
+
+### When to Generate Tests
+
+Always generate unit tests when creating or modifying:
+- ✅ API Controllers (endpoints, request handling)
+- ✅ Application Commands (CQRS command handlers)
+- ✅ Application Queries (CQRS query handlers)
+- ✅ Validators (FluentValidation or custom validation logic)
+- ✅ Domain logic (business rules, calculations)
+- ✅ Services (business logic services)
+
+### Test Generation Pattern
+
+For each new command/query/controller action:
+1. Create corresponding test class (e.g., `CreateNoteTests.cs` for `CreateNote.cs`)
+2. Test happy path with valid inputs
+3. Test validation failures with invalid inputs
+4. Test error handling and edge cases
+5. Verify database state changes (for commands)
+6. Target 90% code coverage minimum
+
+### Example Test Structure
+
+```csharp
+public class CreateNoteCommandTests
+{
+    [Fact]
+    public async Task Handle_ValidCommand_CreatesNote()
+    {
+        // Arrange - setup test data and mocks
+        
+        // Act - execute the command/query
+        
+        // Assert - verify expected outcome
+    }
+    
+    [Fact]
+    public async Task Handle_InvalidInput_ThrowsValidationException()
+    {
+        // Test validation failures
+    }
+}
+```
+
+Reference `quality.md` for detailed testing patterns and standards.
 
 ## Context Files
 
@@ -73,15 +135,21 @@ dotnet run
 cd src/Angular
 ng serve
 
-# Run all tests
+# Run backend tests (REQUIRED after any API/backend changes)
 dotnet test
+dotnet test --collect:"XPlat Code Coverage"  # With coverage report
+
+# Run frontend tests
 cd src/Angular && ng test
+ng test --watch=false --code-coverage  # With coverage report
 
 # Database migrations
 cd src/Web
 dotnet ef migrations add MigrationName
 dotnet ef database update
 ```
+
+**After implementing backend changes, always run `dotnet test` before considering work complete.**
 
 ## Decision Framework
 
@@ -119,4 +187,10 @@ Ask these questions:
 ### File Locations
 - Backend: `src/Web/`
 - Frontend: `src/Angular/src/app/`
+- Backend Tests: `tests/`
 - Documentation: `documentation/`
+
+### Test File Naming
+- Test class: `{ClassName}Tests.cs` (e.g., `CreateNoteTests.cs`)
+- Test project: `{ProjectName}.Tests.csproj`
+- Mirror the structure of the code being tested
