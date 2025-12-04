@@ -182,7 +182,7 @@ test('notes page matches design', async ({ page }) => {
 ```
 
 #### Playwright Test File Location
-- Tests location: `src/Angular/e2e/` or `tests/e2e/`
+- Tests location: `src/MyNote.UI/e2e/` or `tests/e2e/`
 - File naming: `{feature-name}.spec.ts` (e.g., `notes.spec.ts`)
 - Group related tests in describe blocks
 
@@ -222,7 +222,7 @@ cd src/Web
 dotnet run
 
 # Frontend
-cd src/Angular
+cd src/MyNote.UI
 ng serve
 
 # Run backend tests (REQUIRED after any API/backend changes)
@@ -230,12 +230,12 @@ dotnet test
 dotnet test --collect:"XPlat Code Coverage"  # With coverage report
 
 # Run frontend unit tests
-cd src/Angular
+cd src/MyNote.UI
 ng test
 ng test --watch=false --code-coverage  # With coverage report
 
 # Run Playwright E2E tests (REQUIRED after any UI changes)
-cd src/Angular
+cd src/MyNote.UI
 npx playwright test
 npx playwright test --headed  # Run with browser visible
 npx playwright test --ui  # Run with interactive UI
@@ -291,9 +291,9 @@ Ask these questions:
 
 ### File Locations
 - Backend: `src/Web/`
-- Frontend: `src/Angular/src/app/`
+- Frontend: `src/MyNote.UI/src/app/`
 - Backend Tests: `tests/`
-- Playwright Tests: `src/Angular/e2e/` or `tests/e2e/`
+- Playwright Tests: `src/MyNote.UI/e2e/` or `tests/e2e/`
 - Documentation: `documentation/`
 
 ### Test File Naming
@@ -304,5 +304,5 @@ Ask these questions:
 
 **Playwright Tests:**
 - Test file: `{feature-name}.spec.ts` (e.g., `notes.spec.ts`)
-- Location: `src/Angular/e2e/` or `tests/e2e/`
+- Location: `src/MyNote.UI/e2e/` or `tests/e2e/`
 - Group related tests in describe blocks
