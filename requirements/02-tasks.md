@@ -34,6 +34,11 @@
 - [ ] completed_at timestamp is set
 - [ ] If task is linked to a note, the checkbox in the note becomes checked
 
+### Technical Notes
+- Checkbox on each task card toggles done/todo status
+- Note checkbox sync deferred until US-08 (Create Task from Note) is implemented
+- PUT /api/tasks/{id}/status endpoint with { status: "done" | "todo" }
+
 ---
 
 ## US-07: Reopen a Task

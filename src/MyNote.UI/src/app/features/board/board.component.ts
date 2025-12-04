@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task.service';
-import { Task } from '../../models/task.model';
+import { type Task } from '../../models/task.model';
 
 @Component({
   selector: 'app-board',
@@ -56,11 +56,21 @@ import { Task } from '../../models/task.model';
               <!-- Task Cards -->
               <div class="space-y-2">
                 @for (task of todoTasks(); track task.id) {
-                  <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow cursor-pointer">
-                    <p class="text-sm text-gray-900">{{ task.title }}</p>
-                    <p class="text-xs text-gray-400 mt-2">
-                      {{ formatDate(task.createdAt) }}
-                    </p>
+                  <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow">
+                    <div class="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        [checked]="false"
+                        (change)="toggleTaskStatus(task)"
+                        class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-900">{{ task.title }}</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                          {{ formatDate(task.createdAt) }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 }
               </div>
@@ -86,10 +96,20 @@ import { Task } from '../../models/task.model';
               <div class="space-y-2">
                 @for (task of doneTasks(); track task.id) {
                   <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60">
-                    <p class="text-sm text-gray-500 line-through">{{ task.title }}</p>
-                    <p class="text-xs text-gray-400 mt-2">
-                      {{ formatDate(task.completedAt!) }}
-                    </p>
+                    <div class="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        [checked]="true"
+                        (change)="toggleTaskStatus(task)"
+                        class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-500 line-through">{{ task.title }}</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                          {{ formatDate(task.completedAt!) }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 }
               </div>
@@ -124,6 +144,11 @@ export class BoardComponent implements OnInit {
 
     await this.taskService.createTask({ title });
     this.newTaskTitle.set('');
+  }
+
+  async toggleTaskStatus(task: Task): Promise<void> {
+    const newStatus = task.status === 'todo' ? 'done' : 'todo';
+    await this.taskService.updateTaskStatus(task.id, newStatus);
   }
 
   formatDate(dateStr: string): string {

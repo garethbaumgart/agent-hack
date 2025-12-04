@@ -21,4 +21,17 @@ public class TasksController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
     }
+
+    [HttpPut("{id:guid}/status")]
+    public async Task<ActionResult<TaskDto>> UpdateStatus(Guid id, [FromBody] UpdateTaskStatusRequest request, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new UpdateTaskStatusCommand { Id = id, Status = request.Status }, cancellationToken);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+}
+
+public record UpdateTaskStatusRequest
+{
+    public string Status { get; init; } = string.Empty;
 }
