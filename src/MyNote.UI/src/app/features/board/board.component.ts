@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { TaskService } from '../../services/task.service';
 import { LabelService } from '../../services/label.service';
 import { type Task } from '../../models/task.model';
+import { Select } from 'primeng/select';
 
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Select],
   template: `
     <div class="h-full bg-gray-50">
       <!-- Header -->
@@ -17,27 +18,22 @@ import { type Task } from '../../models/task.model';
         <div class="px-8 py-6 flex items-center justify-between">
           <h1 class="text-2xl font-semibold text-gray-900">Board</h1>
 
-          <!-- Label Filter -->
-          <div class="flex items-center gap-2">
+          <!-- Label Filter Dropdown -->
+          <div class="flex items-center gap-3">
             <span class="text-sm text-gray-500">Filter by label:</span>
-            <select
+            <p-select
+              [options]="labelOptions()"
               [ngModel]="selectedLabelFilter()"
               (ngModelChange)="setLabelFilter($event)"
-              class="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            >
-              <option value="">All tasks</option>
-              @for (label of labelService.labels(); track label.id) {
-                <option [value]="label.id">{{ label.name }}</option>
-              }
-            </select>
-            @if (selectedLabelFilter()) {
-              <button
-                (click)="clearLabelFilter()"
-                class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1"
-              >
-                Clear
-              </button>
-            }
+              optionLabel="name"
+              optionValue="id"
+              [filter]="true"
+              filterPlaceholder="Search labels..."
+              [showClear]="true"
+              placeholder="All tasks"
+              class="w-48"
+              styleClass="w-full"
+            />
           </div>
         </div>
       </header>
@@ -330,6 +326,13 @@ export class BoardComponent implements OnInit {
     );
   });
 
+  labelOptions = computed(() => {
+    return this.labelService.labels().map(l => ({
+      id: l.id,
+      name: l.name
+    }));
+  });
+
   async ngOnInit(): Promise<void> {
     await Promise.all([
       this.taskService.loadTasks(),
@@ -481,12 +484,8 @@ export class BoardComponent implements OnInit {
     this.router.navigate(['/notes', noteId]);
   }
 
-  setLabelFilter(labelId: string): void {
-    this.selectedLabelFilter.set(labelId);
-  }
-
-  clearLabelFilter(): void {
-    this.selectedLabelFilter.set('');
+  setLabelFilter(labelId: string | null): void {
+    this.selectedLabelFilter.set(labelId || '');
   }
 
   navigateToLabel(labelId: string): void {
