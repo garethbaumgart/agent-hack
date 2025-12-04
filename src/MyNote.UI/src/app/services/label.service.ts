@@ -1,0 +1,47 @@
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { Label } from '../models/label.model';
+
+@Injectable({ providedIn: 'root' })
+export class LabelService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = 'http://localhost:5275/api/labels';
+
+  private labelsSignal = signal<Label[]>([]);
+  labels = this.labelsSignal.asReadonly();
+
+  async loadLabels(): Promise<void> {
+    const labels = await firstValueFrom(this.http.get<Label[]>(this.apiUrl));
+    this.labelsSignal.set(labels);
+  }
+
+  async addLabelToNote(noteId: string, name: string): Promise<Label> {
+    const label = await firstValueFrom(
+      this.http.post<Label>(`${this.apiUrl}/notes/${noteId}`, { name })
+    );
+    // Refresh labels list to include any new labels
+    await this.loadLabels();
+    return label;
+  }
+
+  async removeLabelFromNote(noteId: string, labelId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete(`${this.apiUrl}/notes/${noteId}/${labelId}`)
+    );
+  }
+
+  async addLabelToTask(taskId: string, name: string): Promise<Label> {
+    const label = await firstValueFrom(
+      this.http.post<Label>(`${this.apiUrl}/tasks/${taskId}`, { name })
+    );
+    await this.loadLabels();
+    return label;
+  }
+
+  async removeLabelFromTask(taskId: string, labelId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete(`${this.apiUrl}/tasks/${taskId}/${labelId}`)
+    );
+  }
+}

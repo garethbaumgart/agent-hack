@@ -11,4 +11,5 @@ public class TaskItem
     public DateTime? DueDate { get; set; }
     public Guid? NoteId { get; set; }
     public Note? Note { get; set; }
+    public ICollection<TaskLabel> TaskLabels { get; set; } = new List<TaskLabel>();
 }

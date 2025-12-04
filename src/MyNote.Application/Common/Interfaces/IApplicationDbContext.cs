@@ -7,5 +7,8 @@ public interface IApplicationDbContext
 {
     DbSet<Note> Notes { get; }
     DbSet<TaskItem> Tasks { get; }
+    DbSet<Label> Labels { get; }
+    DbSet<NoteLabel> NoteLabels { get; }
+    DbSet<TaskLabel> TaskLabels { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

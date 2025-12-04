@@ -1,5 +1,6 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
@@ -8,13 +9,14 @@ import Link from '@tiptap/extension-link';
 import { TiptapEditorDirective } from 'ngx-tiptap';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { NoteService } from '../../services/note.service';
+import { LabelService } from '../../services/label.service';
 import { Note } from '../../models/note.model';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-note-editor',
   standalone: true,
-  imports: [CommonModule, TiptapEditorDirective, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, TiptapEditorDirective, ConfirmDialogComponent],
   template: `
     <div class="min-h-screen bg-white">
       <!-- Top Bar -->
@@ -169,6 +171,67 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
         </div>
       }
 
+      <!-- Labels Section -->
+      <div class="max-w-4xl mx-auto px-8 pt-6">
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Existing Labels -->
+          @for (label of note()?.labels || []; track label.id) {
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+              {{ label.name }}
+              <button
+                class="hover:text-red-600 transition-colors"
+                (click)="removeLabel(label.id)"
+                title="Remove label"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </span>
+          }
+
+          <!-- Add Label Input -->
+          <div class="relative">
+            @if (showLabelInput()) {
+              <div class="relative">
+                <input
+                  type="text"
+                  [(ngModel)]="newLabelName"
+                  (keyup.enter)="addLabel()"
+                  (keyup.escape)="closeLabelInput()"
+                  (input)="onLabelInputChange($event)"
+                  placeholder="Add label..."
+                  class="px-2.5 py-1 text-sm border border-gray-300 rounded-full focus:outline-none focus:border-gray-500 w-32"
+                  #labelInput
+                />
+                @if (filteredLabels().length > 0) {
+                  <div class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[150px]">
+                    @for (label of filteredLabels(); track label.id) {
+                      <button
+                        class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
+                        (click)="selectLabel(label.name)"
+                      >
+                        {{ label.name }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <button
+                class="inline-flex items-center gap-1 px-2.5 py-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-sm rounded-full transition-colors"
+                (click)="openLabelInput()"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add label
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- Editor Area -->
       <main class="max-w-4xl mx-auto px-8 py-8">
         @if (editor) {
@@ -318,6 +381,7 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly noteService = inject(NoteService);
+  private readonly labelService = inject(LabelService);
   private readonly destroy$ = new Subject<void>();
   private readonly contentChange$ = new Subject<string>();
 
@@ -326,6 +390,20 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
   isSaving = signal(false);
   lastSaved = signal(false);
   showDeleteDialog = signal(false);
+  showLabelInput = signal(false);
+  newLabelName = '';
+  labelSearchTerm = signal('');
+
+  allLabels = this.labelService.labels;
+  filteredLabels = computed(() => {
+    const term = this.labelSearchTerm().toLowerCase().trim();
+    if (!term) return [];
+    const noteLabels = this.note()?.labels || [];
+    const noteLabelIds = new Set(noteLabels.map(l => l.id));
+    return this.allLabels()
+      .filter(l => l.name.toLowerCase().includes(term) && !noteLabelIds.has(l.id))
+      .slice(0, 5);
+  });
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
@@ -334,7 +412,11 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const note = await this.noteService.getNote(id);
+    // Load note and all labels in parallel
+    const [note] = await Promise.all([
+      this.noteService.getNote(id),
+      this.labelService.loadLabels()
+    ]);
     this.note.set(note);
 
     this.editor = new Editor({
@@ -414,5 +496,54 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
 
   cancelDelete(): void {
     this.showDeleteDialog.set(false);
+  }
+
+  // Label methods
+  openLabelInput(): void {
+    this.showLabelInput.set(true);
+    this.newLabelName = '';
+    this.labelSearchTerm.set('');
+  }
+
+  closeLabelInput(): void {
+    this.showLabelInput.set(false);
+    this.newLabelName = '';
+    this.labelSearchTerm.set('');
+  }
+
+  onLabelInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.labelSearchTerm.set(input.value);
+  }
+
+  async addLabel(): Promise<void> {
+    const currentNote = this.note();
+    if (!currentNote || !this.newLabelName.trim()) return;
+
+    await this.labelService.addLabelToNote(currentNote.id, this.newLabelName.trim());
+    // Refresh the note to get updated labels
+    const updated = await this.noteService.getNote(currentNote.id);
+    this.note.set(updated);
+    this.closeLabelInput();
+  }
+
+  async selectLabel(name: string): Promise<void> {
+    this.newLabelName = name;
+    await this.addLabel();
+  }
+
+  async removeLabel(labelId: string): Promise<void> {
+    const currentNote = this.note();
+    if (!currentNote) return;
+
+    await this.labelService.removeLabelFromNote(currentNote.id, labelId);
+    // Update local state
+    this.note.update(n => {
+      if (!n) return n;
+      return {
+        ...n,
+        labels: n.labels.filter(l => l.id !== labelId)
+      };
+    });
   }
 }

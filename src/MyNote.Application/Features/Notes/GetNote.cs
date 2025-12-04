@@ -11,6 +11,8 @@ public class GetNoteHandler(IApplicationDbContext context) : IRequestHandler<Get
     public async Task<NoteDto?> Handle(GetNoteQuery request, CancellationToken cancellationToken)
     {
         var note = await context.Notes
+            .Include(n => n.NoteLabels)
+            .ThenInclude(nl => nl.Label)
             .FirstOrDefaultAsync(n => n.Id == request.Id, cancellationToken);
 
         if (note is null)
@@ -21,7 +23,12 @@ public class GetNoteHandler(IApplicationDbContext context) : IRequestHandler<Get
             Id = note.Id,
             Content = note.Content,
             CreatedAt = note.CreatedAt,
-            UpdatedAt = note.UpdatedAt
+            UpdatedAt = note.UpdatedAt,
+            Labels = note.NoteLabels.Select(nl => new NoteLabelDto
+            {
+                Id = nl.Label.Id,
+                Name = nl.Label.Name
+            }).ToList()
         };
     }
 }

@@ -15,6 +15,13 @@ public record NoteDto
     public string Content { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+    public List<NoteLabelDto> Labels { get; init; } = new();
+}
+
+public record NoteLabelDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
 }
 
 public class CreateNoteHandler(IApplicationDbContext context) : IRequestHandler<CreateNoteCommand, NoteDto>
