@@ -13,6 +13,7 @@ import { TiptapEditorDirective } from 'ngx-tiptap';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { NoteService } from '../../services/note.service';
 import { LabelService } from '../../services/label.service';
+import { TaskService } from '../../services/task.service';
 import { Note } from '../../models/note.model';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
@@ -445,6 +446,7 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly noteService = inject(NoteService);
   private readonly labelService = inject(LabelService);
+  private readonly taskService = inject(TaskService);
   private readonly destroy$ = new Subject<void>();
   private readonly contentChange$ = new Subject<string>();
 
@@ -521,6 +523,27 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(content => this.saveNote(content));
+
+    // Subscribe to task status changes that affect this note
+    // This syncs checkbox state when tasks are toggled from the board
+    this.taskService.noteContentUpdates$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(update => {
+        const currentNote = this.note();
+        if (currentNote && update.noteId === currentNote.id) {
+          // Update the editor content with the new checkbox state
+          const selection = this.editor.state.selection;
+          this.editor.commands.setContent(update.updatedContent, { emitUpdate: false });
+          // Try to restore cursor position
+          try {
+            this.editor.commands.setTextSelection(selection.anchor);
+          } catch {
+            // Ignore if position is invalid
+          }
+          // Update the note signal as well
+          this.note.set({ ...currentNote, content: update.updatedContent });
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -554,6 +577,10 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
           // Ignore if position is invalid
         }
       }
+
+      // Reload tasks to sync checkbox changes with the board
+      // This ensures task status changes from checkboxes are reflected everywhere
+      await this.taskService.loadTasks();
 
       this.lastSaved.set(true);
     } finally {

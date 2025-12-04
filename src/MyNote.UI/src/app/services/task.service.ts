@@ -1,8 +1,13 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import { Task, CreateTaskRequest, UpdateTaskStatusResult, UpdateTaskDueDateResult } from '../models/task.model';
 import { environment } from '../../environments/environment';
+
+export interface NoteContentUpdate {
+  noteId: string;
+  updatedContent: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -11,6 +16,10 @@ export class TaskService {
 
   private tasksSignal = signal<Task[]>([]);
   tasks = this.tasksSignal.asReadonly();
+
+  // Event emitter for when a task update affects a note's content
+  private noteContentUpdated$ = new Subject<NoteContentUpdate>();
+  readonly noteContentUpdates$ = this.noteContentUpdated$.asObservable();
 
   async loadTasks(): Promise<void> {
     // Clear existing tasks first to ensure fresh data
@@ -28,6 +37,15 @@ export class TaskService {
   async updateTaskStatus(id: string, status: 'todo' | 'done'): Promise<UpdateTaskStatusResult> {
     const result = await firstValueFrom(this.http.put<UpdateTaskStatusResult>(`${this.apiUrl}/${id}/status`, { status }));
     this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? result.task : t));
+
+    // Emit note content update if the task is linked to a note
+    if (result.noteId && result.updatedNoteContent) {
+      this.noteContentUpdated$.next({
+        noteId: result.noteId,
+        updatedContent: result.updatedNoteContent
+      });
+    }
+
     return result;
   }
 
