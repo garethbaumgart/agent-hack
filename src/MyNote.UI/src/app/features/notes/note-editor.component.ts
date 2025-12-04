@@ -9,11 +9,12 @@ import { TiptapEditorDirective } from 'ngx-tiptap';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { NoteService } from '../../services/note.service';
 import { Note } from '../../models/note.model';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-note-editor',
   standalone: true,
-  imports: [CommonModule, TiptapEditorDirective],
+  imports: [CommonModule, TiptapEditorDirective, ConfirmDialogComponent],
   template: `
     <div class="min-h-screen bg-white">
       <!-- Top Bar -->
@@ -30,8 +31,8 @@ import { Note } from '../../models/note.model';
             Back to Notes
           </button>
 
-          <!-- Status -->
-          <div class="flex items-center gap-2">
+          <!-- Status & Actions -->
+          <div class="flex items-center gap-4">
             @if (isSaving()) {
               <span class="text-xs text-gray-400 flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
@@ -43,6 +44,17 @@ import { Note } from '../../models/note.model';
                 Saved
               </span>
             }
+
+            <!-- Delete Button -->
+            <button
+              class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              (click)="confirmDelete()"
+              title="Delete note"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -164,6 +176,16 @@ import { Note } from '../../models/note.model';
         }
       </main>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <app-confirm-dialog
+      [isOpen]="showDeleteDialog()"
+      title="Delete Note"
+      message="Are you sure you want to delete this note? This action cannot be undone."
+      confirmText="Delete"
+      (confirm)="deleteNote()"
+      (cancel)="cancelDelete()"
+    />
   `,
   styles: [`
     :host ::ng-deep .tiptap {
@@ -303,6 +325,7 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
   note = signal<Note | null>(null);
   isSaving = signal(false);
   lastSaved = signal(false);
+  showDeleteDialog = signal(false);
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
@@ -374,5 +397,22 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/']);
+  }
+
+  confirmDelete(): void {
+    this.showDeleteDialog.set(true);
+  }
+
+  async deleteNote(): Promise<void> {
+    const currentNote = this.note();
+    if (currentNote) {
+      await this.noteService.deleteNote(currentNote.id);
+      this.router.navigate(['/']);
+    }
+    this.showDeleteDialog.set(false);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteDialog.set(false);
   }
 }

@@ -38,4 +38,11 @@ public class NotesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(command, cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new DeleteNoteCommand(id), cancellationToken);
+        return result ? NoContent() : NotFound();
+    }
 }
