@@ -4,14 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Workflow
 
-### For New Features
+### For New Features / User Stories
 
 ```
-1. UNDERSTAND  → What problem? Who uses it? (load domain.md)
-2. DESIGN      → How should it work? (load architecture.md)
-3. BUILD       → Database → API → UI (reference quality.md)
-4. VALIDATE    → Does it work? Does it meet the need?
+1. CLARIFY     → Ask questions before starting (see below)
+2. UNDERSTAND  → What problem? Who uses it? (load domain.md)
+3. DESIGN      → How should it work? (load architecture.md)
+4. BUILD       → Database → API → UI (reference quality.md)
+5. VALIDATE    → Does it work? Does it meet the need?
 ```
+
+**Before executing on a user story or requirement, always ask clarifying questions:**
+
+- What is unclear or ambiguous in the acceptance criteria?
+- Are there edge cases not covered?
+- Are there dependencies on other stories?
+- What should happen on error?
+- Are there UI/UX details missing (e.g., loading states, empty states)?
+- Does this conflict with or duplicate existing functionality?
+
+Do NOT start implementation until the user has answered your questions or confirmed there are none.
 
 ### For Bug Fixes
 
