@@ -56,7 +56,16 @@ import { type Task } from '../../models/task.model';
               <!-- Task Cards -->
               <div class="space-y-2">
                 @for (task of todoTasks(); track task.id) {
-                  <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow">
+                  <div class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow relative">
+                    <button
+                      (click)="deleteTask(task)"
+                      class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                      title="Delete task"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
                     <div class="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -64,7 +73,7 @@ import { type Task } from '../../models/task.model';
                         (change)="toggleTaskStatus(task)"
                         class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
-                      <div class="flex-1 min-w-0">
+                      <div class="flex-1 min-w-0 pr-4">
                         @if (editingTaskId() === task.id) {
                           <input
                             type="text"
@@ -138,7 +147,16 @@ import { type Task } from '../../models/task.model';
 
               <div class="space-y-2">
                 @for (task of doneTasks(); track task.id) {
-                  <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60">
+                  <div class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60 relative">
+                    <button
+                      (click)="deleteTask(task)"
+                      class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                      title="Delete task"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
                     <div class="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -146,7 +164,7 @@ import { type Task } from '../../models/task.model';
                         (change)="toggleTaskStatus(task)"
                         class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
-                      <div class="flex-1 min-w-0">
+                      <div class="flex-1 min-w-0 pr-4">
                         @if (editingTaskId() === task.id) {
                           <input
                             type="text"
@@ -210,6 +228,10 @@ export class BoardComponent implements OnInit {
   async toggleTaskStatus(task: Task): Promise<void> {
     const newStatus = task.status === 'todo' ? 'done' : 'todo';
     await this.taskService.updateTaskStatus(task.id, newStatus);
+  }
+
+  async deleteTask(task: Task): Promise<void> {
+    await this.taskService.deleteTask(task.id);
   }
 
   startEdit(task: Task): void {

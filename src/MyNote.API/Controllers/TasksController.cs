@@ -45,6 +45,14 @@ public class TasksController(IMediator mediator) : ControllerBase
         if (result == null) return NotFound();
         return Ok(result);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new DeleteTaskCommand { Id = id }, cancellationToken);
+        if (!result) return NotFound();
+        return NoContent();
+    }
 }
 
 public record UpdateTaskStatusRequest

@@ -40,6 +40,11 @@ export class TaskService {
     return task;
   }
 
+  async deleteTask(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`));
+    this.tasksSignal.update(tasks => tasks.filter(t => t.id !== id));
+  }
+
   getTodoTasks(): Task[] {
     return this.tasksSignal()
       .filter(t => t.status === 'todo')
