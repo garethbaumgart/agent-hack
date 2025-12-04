@@ -37,6 +37,22 @@ public class LabelsController(IMediator mediator) : ControllerBase
         if (!result) return NotFound();
         return NoContent();
     }
+
+    [HttpPost("tasks/{taskId:guid}")]
+    public async Task<ActionResult<LabelDto>> AddLabelToTask(Guid taskId, [FromBody] AddLabelRequest request, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new AddLabelToTaskCommand { TaskId = taskId, LabelName = request.Name }, cancellationToken);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
+    [HttpDelete("tasks/{taskId:guid}/{labelId:guid}")]
+    public async Task<ActionResult> RemoveLabelFromTask(Guid taskId, Guid labelId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new RemoveLabelFromTaskCommand { TaskId = taskId, LabelId = labelId }, cancellationToken);
+        if (!result) return NotFound();
+        return NoContent();
+    }
 }
 
 public record AddLabelRequest

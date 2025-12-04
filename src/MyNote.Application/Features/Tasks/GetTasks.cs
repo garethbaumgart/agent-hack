@@ -11,6 +11,8 @@ public class GetTasksHandler(IApplicationDbContext context) : IRequestHandler<Ge
     public async Task<List<TaskDto>> Handle(GetTasksQuery request, CancellationToken cancellationToken)
     {
         return await context.Tasks
+            .Include(t => t.TaskLabels)
+            .ThenInclude(tl => tl.Label)
             .OrderByDescending(t => t.CreatedAt)
             .Select(t => new TaskDto
             {
@@ -21,7 +23,12 @@ public class GetTasksHandler(IApplicationDbContext context) : IRequestHandler<Ge
                 UpdatedAt = t.UpdatedAt,
                 CompletedAt = t.CompletedAt,
                 DueDate = t.DueDate,
-                NoteId = t.NoteId
+                NoteId = t.NoteId,
+                Labels = t.TaskLabels.Select(tl => new TaskLabelDto
+                {
+                    Id = tl.Label.Id,
+                    Name = tl.Label.Name
+                }).ToList()
             })
             .ToListAsync(cancellationToken);
     }

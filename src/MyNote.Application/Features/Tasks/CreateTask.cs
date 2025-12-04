@@ -19,6 +19,13 @@ public record TaskDto
     public DateTime? CompletedAt { get; init; }
     public DateTime? DueDate { get; init; }
     public Guid? NoteId { get; init; }
+    public List<TaskLabelDto> Labels { get; init; } = new();
+}
+
+public record TaskLabelDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
 }
 
 public class CreateTaskHandler(IApplicationDbContext context) : IRequestHandler<CreateTaskCommand, TaskDto>

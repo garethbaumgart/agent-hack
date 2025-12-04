@@ -1,3 +1,8 @@
+export interface TaskLabel {
+  id: string;
+  name: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -7,6 +12,7 @@ export interface Task {
   completedAt: string | null;
   dueDate: string | null;
   noteId: string | null;
+  labels: TaskLabel[];
 }
 
 export interface CreateTaskRequest {

@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task.service';
+import { LabelService } from '../../services/label.service';
 import { type Task } from '../../models/task.model';
 
 @Component({
@@ -121,6 +122,45 @@ import { type Task } from '../../models/task.model';
                             </button>
                           }
                         </div>
+                        <!-- Labels -->
+                        <div class="flex flex-wrap items-center gap-1 mt-2">
+                          @for (label of task.labels; track label.id) {
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
+                              {{ label.name }}
+                              <button
+                                (click)="removeTaskLabel(task, label.id); $event.stopPropagation()"
+                                class="hover:text-blue-900"
+                              >×</button>
+                            </span>
+                          }
+                          @if (editingLabelTaskId() === task.id) {
+                            <div class="relative">
+                              <input
+                                type="text"
+                                [(ngModel)]="labelSearchTerm"
+                                (keyup.enter)="addTaskLabel(task)"
+                                (keyup.escape)="cancelLabelEdit()"
+                                placeholder="Label name"
+                                class="w-24 text-xs border border-gray-300 rounded px-1.5 py-0.5 focus:outline-none focus:border-gray-500"
+                              />
+                              @if (filteredLabels().length > 0) {
+                                <div class="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-10">
+                                  @for (label of filteredLabels(); track label.id) {
+                                    <button
+                                      (click)="selectTaskLabel(task, label.name)"
+                                      class="w-full text-left px-2 py-1 text-xs hover:bg-gray-100"
+                                    >{{ label.name }}</button>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          } @else {
+                            <button
+                              (click)="startLabelEdit(task)"
+                              class="text-xs text-gray-400 hover:text-gray-600 px-1"
+                            >+ Label</button>
+                          }
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -204,17 +244,31 @@ import { type Task } from '../../models/task.model';
 })
 export class BoardComponent implements OnInit {
   private readonly taskService = inject(TaskService);
+  private readonly labelService = inject(LabelService);
 
   newTaskTitle = signal('');
   editingTaskId = signal<string | null>(null);
   editingTitle = signal('');
   editingDueDateTaskId = signal<string | null>(null);
+  editingLabelTaskId = signal<string | null>(null);
+  labelSearchTerm = signal('');
 
   todoTasks = () => this.taskService.getTodoTasks();
   doneTasks = () => this.taskService.getDoneTasks();
 
+  filteredLabels = computed(() => {
+    const searchTerm = this.labelSearchTerm().toLowerCase();
+    if (!searchTerm) return [];
+    return this.labelService.labels().filter(l =>
+      l.name.toLowerCase().includes(searchTerm)
+    );
+  });
+
   async ngOnInit(): Promise<void> {
-    await this.taskService.loadTasks();
+    await Promise.all([
+      this.taskService.loadTasks(),
+      this.labelService.loadLabels()
+    ]);
   }
 
   async createTask(): Promise<void> {
@@ -326,5 +380,34 @@ export class BoardComponent implements OnInit {
     dueDate.setHours(0, 0, 0, 0);
     const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return diffDays >= 0 && diffDays <= 2;
+  }
+
+  startLabelEdit(task: Task): void {
+    this.editingLabelTaskId.set(task.id);
+    this.labelSearchTerm.set('');
+  }
+
+  cancelLabelEdit(): void {
+    this.editingLabelTaskId.set(null);
+    this.labelSearchTerm.set('');
+  }
+
+  async addTaskLabel(task: Task): Promise<void> {
+    const name = this.labelSearchTerm().trim();
+    if (!name) return;
+    await this.labelService.addLabelToTask(task.id, name);
+    await this.taskService.loadTasks();
+    this.cancelLabelEdit();
+  }
+
+  async selectTaskLabel(task: Task, labelName: string): Promise<void> {
+    await this.labelService.addLabelToTask(task.id, labelName);
+    await this.taskService.loadTasks();
+    this.cancelLabelEdit();
+  }
+
+  async removeTaskLabel(task: Task, labelId: string): Promise<void> {
+    await this.labelService.removeLabelFromTask(task.id, labelId);
+    await this.taskService.loadTasks();
   }
 }
