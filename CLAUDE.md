@@ -182,7 +182,7 @@ test('notes page matches design', async ({ page }) => {
 ```
 
 #### Playwright Test File Location
-- Tests location: `src/Angular/e2e/` or `tests/e2e/`
+- Tests location: `src/MyNote.UI/e2e/` or `tests/e2e/`
 - File naming: `{feature-name}.spec.ts` (e.g., `notes.spec.ts`)
 - Group related tests in describe blocks
 
