@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task.service';
-import { Task } from '../../models/task.model';
+import { type Task } from '../../models/task.model';
 
 @Component({
   selector: 'app-board',
@@ -56,11 +56,73 @@ import { Task } from '../../models/task.model';
               <!-- Task Cards -->
               <div class="space-y-2">
                 @for (task of todoTasks(); track task.id) {
-                  <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow cursor-pointer">
-                    <p class="text-sm text-gray-900">{{ task.title }}</p>
-                    <p class="text-xs text-gray-400 mt-2">
-                      {{ formatDate(task.createdAt) }}
-                    </p>
+                  <div class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow relative">
+                    <button
+                      (click)="deleteTask(task)"
+                      class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                      title="Delete task"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                    <div class="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        [checked]="false"
+                        (change)="toggleTaskStatus(task)"
+                        class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                      />
+                      <div class="flex-1 min-w-0 pr-4">
+                        @if (editingTaskId() === task.id) {
+                          <input
+                            type="text"
+                            [value]="editingTitle()"
+                            (input)="onEditInput($event)"
+                            (keyup.enter)="saveEdit(task)"
+                            (keyup.escape)="cancelEdit()"
+                            (blur)="saveEdit(task)"
+                            class="w-full text-sm text-gray-900 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                            #editInput
+                          />
+                        } @else {
+                          <p
+                            class="text-sm text-gray-900 cursor-pointer hover:text-gray-600"
+                            (click)="startEdit(task)"
+                          >{{ task.title }}</p>
+                        }
+                        <div class="flex items-center gap-2 mt-1">
+                          <p class="text-xs text-gray-400">
+                            {{ formatDate(task.createdAt) }}
+                          </p>
+                          @if (editingDueDateTaskId() === task.id) {
+                            <input
+                              type="date"
+                              [value]="task.dueDate ? task.dueDate.split('T')[0] : ''"
+                              (change)="onDueDateChange($event, task)"
+                              (blur)="cancelDueDateEdit()"
+                              class="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                            />
+                            @if (task.dueDate) {
+                              <button
+                                (click)="clearDueDate(task); $event.stopPropagation()"
+                                class="text-xs text-red-500 hover:text-red-700"
+                              >Clear</button>
+                            }
+                          } @else {
+                            <button
+                              (click)="startDueDateEdit(task)"
+                              class="text-xs px-1.5 py-0.5 rounded hover:bg-gray-100"
+                              [class.text-orange-600]="isDueSoon(task.dueDate)"
+                              [class.text-red-600]="isOverdue(task.dueDate)"
+                              [class.text-gray-400]="!task.dueDate"
+                            >
+                              {{ task.dueDate ? formatDueDate(task.dueDate) : 'Set due date' }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 }
               </div>
@@ -85,11 +147,45 @@ import { Task } from '../../models/task.model';
 
               <div class="space-y-2">
                 @for (task of doneTasks(); track task.id) {
-                  <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60">
-                    <p class="text-sm text-gray-500 line-through">{{ task.title }}</p>
-                    <p class="text-xs text-gray-400 mt-2">
-                      {{ formatDate(task.completedAt!) }}
-                    </p>
+                  <div class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60 relative">
+                    <button
+                      (click)="deleteTask(task)"
+                      class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                      title="Delete task"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                    <div class="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        [checked]="true"
+                        (change)="toggleTaskStatus(task)"
+                        class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                      />
+                      <div class="flex-1 min-w-0 pr-4">
+                        @if (editingTaskId() === task.id) {
+                          <input
+                            type="text"
+                            [value]="editingTitle()"
+                            (input)="onEditInput($event)"
+                            (keyup.enter)="saveEdit(task)"
+                            (keyup.escape)="cancelEdit()"
+                            (blur)="saveEdit(task)"
+                            class="w-full text-sm text-gray-500 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                          />
+                        } @else {
+                          <p
+                            class="text-sm text-gray-500 line-through cursor-pointer hover:text-gray-400"
+                            (click)="startEdit(task)"
+                          >{{ task.title }}</p>
+                        }
+                        <p class="text-xs text-gray-400 mt-1">
+                          {{ formatDate(task.completedAt!) }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 }
               </div>
@@ -110,6 +206,9 @@ export class BoardComponent implements OnInit {
   private readonly taskService = inject(TaskService);
 
   newTaskTitle = signal('');
+  editingTaskId = signal<string | null>(null);
+  editingTitle = signal('');
+  editingDueDateTaskId = signal<string | null>(null);
 
   todoTasks = () => this.taskService.getTodoTasks();
   doneTasks = () => this.taskService.getDoneTasks();
@@ -126,6 +225,38 @@ export class BoardComponent implements OnInit {
     this.newTaskTitle.set('');
   }
 
+  async toggleTaskStatus(task: Task): Promise<void> {
+    const newStatus = task.status === 'todo' ? 'done' : 'todo';
+    await this.taskService.updateTaskStatus(task.id, newStatus);
+  }
+
+  async deleteTask(task: Task): Promise<void> {
+    await this.taskService.deleteTask(task.id);
+  }
+
+  startEdit(task: Task): void {
+    this.editingTaskId.set(task.id);
+    this.editingTitle.set(task.title);
+  }
+
+  onEditInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.editingTitle.set(input.value);
+  }
+
+  async saveEdit(task: Task): Promise<void> {
+    const newTitle = this.editingTitle().trim();
+    if (newTitle && newTitle !== task.title) {
+      await this.taskService.updateTaskTitle(task.id, newTitle);
+    }
+    this.cancelEdit();
+  }
+
+  cancelEdit(): void {
+    this.editingTaskId.set(null);
+    this.editingTitle.set('');
+  }
+
   formatDate(dateStr: string): string {
     const date = new Date(dateStr);
     const now = new Date();
@@ -140,5 +271,60 @@ export class BoardComponent implements OnInit {
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+
+  startDueDateEdit(task: Task): void {
+    this.editingDueDateTaskId.set(task.id);
+  }
+
+  cancelDueDateEdit(): void {
+    this.editingDueDateTaskId.set(null);
+  }
+
+  async onDueDateChange(event: Event, task: Task): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const dateValue = input.value ? new Date(input.value + 'T00:00:00').toISOString() : null;
+    await this.taskService.updateTaskDueDate(task.id, dateValue);
+    this.cancelDueDateEdit();
+  }
+
+  async clearDueDate(task: Task): Promise<void> {
+    await this.taskService.updateTaskDueDate(task.id, null);
+    this.cancelDueDateEdit();
+  }
+
+  formatDueDate(dateStr: string | null): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(dateStr);
+    dueDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return `Overdue (${date.toLocaleDateString([], { month: 'short', day: 'numeric' })})`;
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return 'Due tomorrow';
+    if (diffDays < 7) return `Due in ${diffDays}d`;
+    return `Due ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+  }
+
+  isOverdue(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(dateStr);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate < today;
+  }
+
+  isDueSoon(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(dateStr);
+    dueDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 2;
   }
 }

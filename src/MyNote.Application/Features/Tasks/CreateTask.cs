@@ -17,6 +17,7 @@ public record TaskDto
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
     public DateTime? CompletedAt { get; init; }
+    public DateTime? DueDate { get; init; }
     public Guid? NoteId { get; init; }
 }
 
@@ -44,6 +45,7 @@ public class CreateTaskHandler(IApplicationDbContext context) : IRequestHandler<
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
             CompletedAt = task.CompletedAt,
+            DueDate = task.DueDate,
             NoteId = task.NoteId
         };
     }

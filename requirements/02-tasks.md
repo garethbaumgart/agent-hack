@@ -34,6 +34,11 @@
 - [ ] completed_at timestamp is set
 - [ ] If task is linked to a note, the checkbox in the note becomes checked
 
+### Technical Notes
+- Checkbox on each task card toggles done/todo status
+- Note checkbox sync deferred until US-08 (Create Task from Note) is implemented
+- PUT /api/tasks/{id}/status endpoint with { status: "done" | "todo" }
+
 ---
 
 ## US-07: Reopen a Task
@@ -44,10 +49,16 @@
 
 ### Acceptance Criteria
 
-- [ ] User can mark a done task as todo
-- [ ] Task moves from Done to Todo column
-- [ ] completed_at is cleared
+- [x] User can mark a done task as todo
+- [x] Task moves from Done to Todo column
+- [x] completed_at is cleared
 - [ ] If task is linked to a note, the checkbox in the note becomes unchecked
+
+### Technical Notes
+- Implemented as part of US-06 - same checkbox toggle mechanism works bidirectionally
+- Unchecking a done task calls PUT /api/tasks/{id}/status with { status: "todo" }
+- completed_at is cleared when status changes to "todo"
+- Note checkbox sync deferred until US-08 (Create Task from Note) is implemented
 
 ---
 
@@ -61,6 +72,12 @@
 
 - [ ] User can edit task title from the Board View
 - [ ] If task is linked to a note, the checkbox text in the note is updated
+
+### Technical Notes
+- Click on task title to turn it into inline text input
+- Enter or blur to save, Escape to cancel
+- PUT /api/tasks/{id} endpoint with { title: "new title" }
+- Note checkbox sync deferred until note-task linking is implemented
 
 ---
 
