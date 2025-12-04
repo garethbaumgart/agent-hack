@@ -10,9 +10,14 @@
 
 - [ ] User can create a task from the Board View
 - [ ] User enters task title
-- [ ] User can optionally add labels
-- [ ] User can optionally add a due date
 - [ ] Task appears in Todo column
+- [ ] Board View accessible via sidebar navigation
+
+### Technical Notes
+- Labels deferred to future user story (03-Labels.md)
+- Due date deferred to US-12 in 03-Labels.md
+- Sidebar navigation with Notes and Board links
+- Task entity: id, title, status (todo/done), createdAt, updatedAt, completedAt (nullable), noteId (nullable for linked tasks)
 
 ---
 
