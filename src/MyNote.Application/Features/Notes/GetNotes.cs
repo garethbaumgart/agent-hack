@@ -11,7 +11,7 @@ public class GetNotesHandler(IApplicationDbContext context) : IRequestHandler<Ge
     public async Task<List<NoteDto>> Handle(GetNotesQuery request, CancellationToken cancellationToken)
     {
         return await context.Notes
-            .OrderByDescending(n => n.CreatedAt)
+            .OrderByDescending(n => n.UpdatedAt)
             .Select(n => new NoteDto
             {
                 Id = n.Id,

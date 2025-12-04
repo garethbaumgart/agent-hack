@@ -31,4 +31,9 @@ export class NoteService {
     this.notesSignal.update(notes => notes.map(n => n.id === note.id ? note : n));
     return note;
   }
+
+  async deleteNote(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.apiUrl}/${id}`));
+    this.notesSignal.update(notes => notes.filter(n => n.id !== id));
+  }
 }

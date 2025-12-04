@@ -1,12 +1,13 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NoteService } from '../../services/note.service';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-note-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmDialogComponent],
   template: `
     <div class="min-h-screen bg-white">
       <!-- Header -->
@@ -59,21 +60,50 @@ import { NoteService } from '../../services/note.service';
                   <p class="text-sm font-medium text-gray-900 truncate">
                     {{ getTitle(note.content) }}
                   </p>
+                  @if (getSnippet(note.content)) {
+                    <p class="text-sm text-gray-500 mt-0.5 line-clamp-2">
+                      {{ getSnippet(note.content) }}
+                    </p>
+                  }
                   <p class="text-xs text-gray-400 mt-1">
                     {{ formatDate(note.updatedAt) }}
                   </p>
                 </div>
+
+                <!-- Delete Button -->
+                <button
+                  class="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  (click)="confirmDelete($event, note.id)"
+                  title="Delete note"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
               </article>
             }
           </div>
         }
       </main>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <app-confirm-dialog
+      [isOpen]="showDeleteDialog()"
+      title="Delete Note"
+      message="Are you sure you want to delete this note? This action cannot be undone."
+      confirmText="Delete"
+      (confirm)="deleteNote()"
+      (cancel)="cancelDelete()"
+    />
   `
 })
 export class NoteListComponent implements OnInit {
   readonly noteService = inject(NoteService);
   private readonly router = inject(Router);
+
+  showDeleteDialog = signal(false);
+  noteToDelete = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
     await this.noteService.loadNotes();
@@ -88,11 +118,41 @@ export class NoteListComponent implements OnInit {
     this.router.navigate(['/notes', id]);
   }
 
+  confirmDelete(event: Event, id: string): void {
+    event.stopPropagation();
+    this.noteToDelete.set(id);
+    this.showDeleteDialog.set(true);
+  }
+
+  async deleteNote(): Promise<void> {
+    const id = this.noteToDelete();
+    if (id) {
+      await this.noteService.deleteNote(id);
+    }
+    this.showDeleteDialog.set(false);
+    this.noteToDelete.set(null);
+  }
+
+  cancelDelete(): void {
+    this.showDeleteDialog.set(false);
+    this.noteToDelete.set(null);
+  }
+
   getTitle(content: string): string {
     if (!content) return 'Untitled';
     const text = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     if (!text) return 'Untitled';
-    return text.substring(0, 60) || 'Untitled';
+    const firstLine = text.split(/[.\n]/)[0];
+    return firstLine.substring(0, 60) || 'Untitled';
+  }
+
+  getSnippet(content: string): string {
+    if (!content) return '';
+    const text = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    const title = this.getTitle(content);
+    const remaining = text.substring(title.length).trim();
+    return remaining.substring(0, 120);
   }
 
   formatDate(dateStr: string): string {

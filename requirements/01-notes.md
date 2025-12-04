@@ -58,6 +58,12 @@
 
 ### Acceptance Criteria
 
-- [ ] Notes displayed newest first
-- [ ] Each note shows: content preview, labels, task count
+- [ ] Notes displayed newest first (by updatedAt)
+- [ ] Each note shows: title + content snippet preview
 - [ ] Clicking a note opens it in the editor
+
+### Technical Notes
+- Labels deferred to future user story
+- Task count deferred until tasks feature is implemented
+- Title extracted from first line/heading of content
+- Snippet shows 1-2 lines of additional content preview
