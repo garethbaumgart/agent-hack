@@ -1,16 +1,20 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NoteService } from '../../services/note.service';
+import { LabelService } from '../../services/label.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { Note } from '../../models/note.model';
+import { Label } from '../../models/label.model';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
 type ViewMode = 'grid' | 'list';
 
 @Component({
   selector: 'app-note-list',
   standalone: true,
-  imports: [CommonModule, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
   template: `
     <div class="min-h-screen bg-white">
       <!-- Header -->
@@ -59,10 +63,75 @@ type ViewMode = 'grid' | 'list';
         </div>
       </header>
 
+      <!-- Search and Filter Bar -->
+      <div class="border-b border-gray-100">
+        <div class="max-w-5xl mx-auto px-8 py-4">
+          <!-- Search Input -->
+          <div class="flex items-center gap-4">
+            <div class="flex-1 relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input
+                type="text"
+                class="w-full pl-10 pr-10 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                placeholder="Search notes..."
+                [ngModel]="searchTerm()"
+                (ngModelChange)="onSearchChange($event)"
+              />
+              @if (searchTerm()) {
+                <button
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  (click)="clearSearch()"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Label Filters -->
+          @if (labelService.labels().length > 0) {
+            <div class="mt-3 flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-gray-500">Labels:</span>
+              @for (label of labelService.labels(); track label.id) {
+                <button
+                  class="px-2.5 py-1 text-xs rounded-full transition-colors flex items-center gap-1"
+                  [class.bg-gray-900]="isLabelSelected(label.id)"
+                  [class.text-white]="isLabelSelected(label.id)"
+                  [class.bg-gray-100]="!isLabelSelected(label.id)"
+                  [class.text-gray-600]="!isLabelSelected(label.id)"
+                  [class.hover:bg-gray-200]="!isLabelSelected(label.id)"
+                  (click)="toggleLabel(label.id)"
+                >
+                  {{ label.name }}
+                  <span class="text-xs opacity-70">({{ getLabelCount(label.id) }})</span>
+                  @if (isLabelSelected(label.id)) {
+                    <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  }
+                </button>
+              }
+              @if (hasActiveFilters()) {
+                <button
+                  class="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 underline"
+                  (click)="clearAllFilters()"
+                >
+                  Clear all
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
       <!-- Content -->
       <main class="max-w-5xl mx-auto px-8 py-6">
-        @if (noteService.notes().length === 0) {
-          <!-- Empty State -->
+        @if (noteService.notes().length === 0 && !hasActiveFilters()) {
+          <!-- Empty State - No Notes -->
           <div
             class="border border-dashed border-gray-200 rounded-lg p-12 text-center cursor-pointer hover:border-gray-300 hover:bg-gray-50/50 transition-all"
             (click)="createNote()"
@@ -74,11 +143,28 @@ type ViewMode = 'grid' | 'list';
             </div>
             <p class="text-gray-500 text-sm">Create your first note</p>
           </div>
+        } @else if (filteredNotes().length === 0 && hasActiveFilters()) {
+          <!-- Empty State - No Search Results -->
+          <div class="border border-dashed border-gray-200 rounded-lg p-12 text-center">
+            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <p class="text-gray-900 font-medium text-sm">No notes found</p>
+            <p class="text-gray-500 text-sm mt-1">Try adjusting your search or filters</p>
+            <button
+              class="mt-4 text-sm text-gray-600 hover:text-gray-900 underline"
+              (click)="clearAllFilters()"
+            >
+              Clear all filters
+            </button>
+          </div>
         } @else {
           <!-- Grid View -->
           @if (viewMode() === 'grid') {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              @for (note of noteService.notes(); track note.id) {
+              @for (note of filteredNotes(); track note.id) {
                 <article
                   class="group relative flex flex-col p-4 rounded-lg cursor-pointer bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all h-48"
                   (click)="openNote(note.id)"
@@ -194,19 +280,52 @@ type ViewMode = 'grid' | 'list';
     />
   `
 })
-export class NoteListComponent implements OnInit {
+export class NoteListComponent implements OnInit, OnDestroy {
   readonly noteService = inject(NoteService);
+  readonly labelService = inject(LabelService);
   private readonly router = inject(Router);
 
   private readonly VIEW_MODE_KEY = 'notes-view-mode';
+  private readonly destroy$ = new Subject<void>();
+  private readonly searchSubject = new Subject<string>();
 
   showDeleteDialog = signal(false);
   noteToDelete = signal<string | null>(null);
   viewMode = signal<ViewMode>(this.loadViewMode());
+  searchTerm = signal('');
+  selectedLabelIds = signal<Set<string>>(new Set());
 
-  // Group notes by date for list view
-  groupedNotes = computed(() => {
+  // Filter notes based on search term and selected labels
+  filteredNotes = computed(() => {
     const notes = this.noteService.notes();
+    const search = this.searchTerm().toLowerCase().trim();
+    const labelIds = this.selectedLabelIds();
+
+    return notes.filter(note => {
+      // Search filter (min 2 chars)
+      if (search.length >= 2) {
+        const title = this.getTitle(note.content).toLowerCase();
+        if (!title.includes(search)) {
+          return false;
+        }
+      }
+
+      // Label filter (OR logic - note has any of the selected labels)
+      if (labelIds.size > 0) {
+        const noteLabels = note.labels || [];
+        const hasMatchingLabel = noteLabels.some(l => labelIds.has(l.id));
+        if (!hasMatchingLabel) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  });
+
+  // Group notes by date for list view (uses filtered notes)
+  groupedNotes = computed(() => {
+    const notes = this.filteredNotes();
     const groups: { label: string; notes: Note[] }[] = [];
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -241,8 +360,27 @@ export class NoteListComponent implements OnInit {
     return groups;
   });
 
+  constructor() {
+    // Setup debounced search
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(term => {
+      this.searchTerm.set(term);
+    });
+  }
+
   async ngOnInit(): Promise<void> {
-    await this.noteService.loadNotes();
+    await Promise.all([
+      this.noteService.loadNotes(),
+      this.labelService.loadLabels()
+    ]);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadViewMode(): ViewMode {
@@ -322,5 +460,44 @@ export class NoteListComponent implements OnInit {
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+
+  // Search methods
+  onSearchChange(term: string): void {
+    this.searchSubject.next(term);
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+  }
+
+  // Label filter methods
+  isLabelSelected(labelId: string): boolean {
+    return this.selectedLabelIds().has(labelId);
+  }
+
+  toggleLabel(labelId: string): void {
+    const current = new Set(this.selectedLabelIds());
+    if (current.has(labelId)) {
+      current.delete(labelId);
+    } else {
+      current.add(labelId);
+    }
+    this.selectedLabelIds.set(current);
+  }
+
+  getLabelCount(labelId: string): number {
+    return this.noteService.notes().filter(
+      note => note.labels?.some(l => l.id === labelId)
+    ).length;
+  }
+
+  hasActiveFilters(): boolean {
+    return this.searchTerm().length >= 2 || this.selectedLabelIds().size > 0;
+  }
+
+  clearAllFilters(): void {
+    this.searchTerm.set('');
+    this.selectedLabelIds.set(new Set());
   }
 }
