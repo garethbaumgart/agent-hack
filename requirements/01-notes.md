@@ -172,3 +172,61 @@
 - Combine with existing sort (by updatedAt)
 - Works in both Grid and List views
 - GET /api/notes?search=term&labels=id1,id2 for API filtering
+
+---
+
+## US-31: Insert and Paste Images into Notes
+
+**As an** engineering manager
+**I want to** insert or paste images into my notes
+**So that** I can include screenshots, diagrams, and visual references alongside my text
+
+### Acceptance Criteria
+
+- [ ] User can paste images from clipboard directly into the note editor
+- [ ] User can drag and drop image files into the note editor
+- [ ] User can insert images via a toolbar button (file picker)
+- [ ] Supported image formats: PNG, JPG, JPEG, GIF, WebP
+- [ ] Images are uploaded and stored (not embedded as base64)
+- [ ] Images display inline within the note content
+- [ ] Images can be resized within the editor
+- [ ] Images are deleted from storage when removed from note or note is deleted
+
+### Paste from Clipboard
+
+- [ ] Ctrl+V / Cmd+V pastes image from clipboard at cursor position
+- [ ] Works with screenshots (e.g., from snipping tool, screenshot utilities)
+- [ ] Works with images copied from other applications
+- [ ] Shows upload progress indicator while uploading
+
+### Drag and Drop
+
+- [ ] User can drag image files from file explorer into editor
+- [ ] Drop zone visual feedback when dragging over editor
+- [ ] Multiple images can be dropped at once
+- [ ] Shows upload progress for each image
+
+### Toolbar Insert
+
+- [ ] Image icon button in editor toolbar
+- [ ] Opens file picker dialog on click
+- [ ] Allows selecting multiple images
+- [ ] Images inserted at current cursor position
+
+### Image Display
+
+- [ ] Images displayed inline with text flow
+- [ ] Images have max-width of 100% (responsive)
+- [ ] Click image to select/focus
+- [ ] Resize handles on selected images (corner drag)
+- [ ] Alt text can be set for accessibility (optional)
+
+### Technical Notes
+
+- Use TipTap Image extension
+- Store images in backend storage (local filesystem or cloud storage)
+- API endpoint: POST /api/images for upload, returns image URL
+- API endpoint: DELETE /api/images/:id for cleanup
+- Image metadata stored in database (id, filename, size, note_id, created_at)
+- Consider max file size limit (e.g., 10MB per image)
+- Consider total storage quota per user (future enhancement)

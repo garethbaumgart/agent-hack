@@ -107,3 +107,45 @@
 - [ ] User can delete a task from the Board View
 - [ ] If task is linked to a note, the checkbox is removed from the note
 - [ ] Task is removed from the system
+
+---
+
+## US-32: In Progress Task Status
+
+**As an** engineering manager
+**I want to** mark a task as "In Progress"
+**So that** I can distinguish between tasks I haven't started and tasks I'm actively working on
+
+### Acceptance Criteria
+
+- [ ] Board View displays three columns: Todo, In Progress, Done
+- [ ] User can drag a task from Todo to In Progress
+- [ ] User can drag a task from Done to In Progress
+- [ ] User can drag a task from In Progress to Todo
+- [ ] User can drag a task from In Progress to Done
+- [ ] In Progress column is positioned between Todo and Done
+- [ ] started_at timestamp is set when task enters In Progress
+- [ ] started_at is cleared when task moves back to Todo
+
+### Drag and Drop Behavior
+
+- [ ] Tasks can only enter In Progress via drag and drop (no checkbox toggle)
+- [ ] Dragging from Todo → In Progress: sets started_at
+- [ ] Dragging from In Progress → Done: sets completed_at (keeps started_at)
+- [ ] Dragging from Done → In Progress: clears completed_at, sets started_at if not already set
+- [ ] Dragging from In Progress → Todo: clears started_at
+- [ ] Dragging from Done → Todo: clears completed_at and started_at
+
+### Column Sorting
+
+- [ ] Todo: sorted by due date (earliest first, no due date at bottom)
+- [ ] In Progress: sorted by started_at (most recently started at top)
+- [ ] Done: sorted by completed_at (most recently completed at top)
+
+### Technical Notes
+
+- Task status enum changes from (todo, done) to (todo, in_progress, done)
+- Add started_at (nullable timestamp) column to tasks table
+- PUT /api/tasks/{id}/status endpoint accepts { status: "todo" | "in_progress" | "done" }
+- Use PrimeNG DragDrop or native HTML5 drag-and-drop for column transitions
+- Checkbox toggle on task card only toggles between current status and done (does not cycle through all statuses)

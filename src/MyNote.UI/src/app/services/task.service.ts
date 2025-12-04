@@ -13,6 +13,8 @@ export class TaskService {
   tasks = this.tasksSignal.asReadonly();
 
   async loadTasks(): Promise<void> {
+    // Clear existing tasks first to ensure fresh data
+    this.tasksSignal.set([]);
     const tasks = await firstValueFrom(this.http.get<Task[]>(this.apiUrl));
     this.tasksSignal.set(tasks);
   }

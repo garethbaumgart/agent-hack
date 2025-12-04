@@ -17,20 +17,20 @@ export const routes: Routes = [
           import('./features/notes/note-list.component').then(m => m.NoteListComponent)
       },
       {
+        path: 'notes/:id',
+        loadComponent: () =>
+          import('./features/notes/note-editor.component').then(m => m.NoteEditorComponent)
+      },
+      {
         path: 'board',
         loadComponent: () =>
           import('./features/board/board.component').then(m => m.BoardComponent)
+      },
+      {
+        path: 'labels/:id',
+        loadComponent: () =>
+          import('./features/labels/label-view.component').then(m => m.LabelViewComponent)
       }
     ]
-  },
-  {
-    path: 'notes/:id',
-    loadComponent: () =>
-      import('./features/notes/note-editor.component').then(m => m.NoteEditorComponent)
-  },
-  {
-    path: 'labels/:id',
-    loadComponent: () =>
-      import('./features/labels/label-view.component').then(m => m.LabelViewComponent)
   }
 ];
