@@ -9,9 +9,16 @@
 ### Acceptance Criteria
 
 - [ ] User can create a new note from the Note List View
-- [ ] Note opens in a rich text editor
+- [ ] Note opens in TipTap rich text editor
+- [ ] Note auto-saves on typing (debounced)
 - [ ] Note is saved with created_at timestamp
 - [ ] New note appears at top of Note List View
+- [ ] Editor has "Back to list" button
+
+### Technical Notes
+- Includes minimal Note List View (full list view in US-04)
+- Empty notes are allowed
+- PostgreSQL via Docker for development
 
 ---
 

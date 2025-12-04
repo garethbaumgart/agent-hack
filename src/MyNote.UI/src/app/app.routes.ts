@@ -4,6 +4,11 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./features/notes/note-create.component').then(m => m.NoteCreateComponent)
+      import('./features/notes/note-list.component').then(m => m.NoteListComponent)
+  },
+  {
+    path: 'notes/:id',
+    loadComponent: () =>
+      import('./features/notes/note-editor.component').then(m => m.NoteEditorComponent)
   }
 ];
