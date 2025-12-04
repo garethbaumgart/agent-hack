@@ -49,10 +49,16 @@
 
 ### Acceptance Criteria
 
-- [ ] User can mark a done task as todo
-- [ ] Task moves from Done to Todo column
-- [ ] completed_at is cleared
+- [x] User can mark a done task as todo
+- [x] Task moves from Done to Todo column
+- [x] completed_at is cleared
 - [ ] If task is linked to a note, the checkbox in the note becomes unchecked
+
+### Technical Notes
+- Implemented as part of US-06 - same checkbox toggle mechanism works bidirectionally
+- Unchecking a done task calls PUT /api/tasks/{id}/status with { status: "todo" }
+- completed_at is cleared when status changes to "todo"
+- Note checkbox sync deferred until US-08 (Create Task from Note) is implemented
 
 ---
 
