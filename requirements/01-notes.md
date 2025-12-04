@@ -67,3 +67,108 @@
 - Task count deferred until tasks feature is implemented
 - Title extracted from first line/heading of content
 - Snippet shows 1-2 lines of additional content preview
+
+---
+
+## US-29: Toggle Grid and List View
+
+**As an** engineering manager
+**I want to** switch between grid and list views for my notes
+**So that** I can choose the layout that best suits how I browse my notes
+
+### Acceptance Criteria
+
+- [ ] User can toggle between Grid View and List View
+- [ ] Toggle control is located in the top-right of the Notes page (icon buttons)
+- [ ] Grid View displays notes as cards in a responsive grid layout
+- [ ] List View displays notes as rows in a compact list
+- [ ] User's view preference is persisted (remembered on next visit)
+- [ ] Default view is Grid View
+
+### Grid View Details
+
+- [ ] Notes displayed as cards in a multi-column grid
+- [ ] Each card shows:
+  - Title (first line/heading)
+  - Content preview snippet (2-3 lines)
+  - Labels (if any)
+  - Last updated date
+- [ ] Cards are responsive: fewer columns on mobile, more on desktop
+- [ ] Cards have consistent height with content truncation
+
+### List View Details
+
+- [ ] Notes displayed as single-line rows
+- [ ] Each row shows:
+  - Document icon
+  - Title
+  - Last updated date
+  - Actions menu (three-dot)
+- [ ] Rows grouped by date (Today, Yesterday, Previous 7 days, etc.)
+- [ ] Compact layout optimized for scanning many notes quickly
+
+### Technical Notes
+
+- Use PrimeNG DataView component with layout toggle
+- Store view preference in localStorage
+- Grid: CSS Grid or Flexbox with responsive breakpoints
+- List: Table-like layout with consistent column widths
+- Icons: Grid icon (⊞) and List icon (☰) for toggle buttons
+
+---
+
+## US-30: Search and Filter Notes
+
+**As an** engineering manager
+**I want to** search my notes by title and filter by label
+**So that** I can quickly find specific notes without scrolling through everything
+
+### Acceptance Criteria
+
+- [ ] Search bar is prominently displayed at the top of the Notes page
+- [ ] User can search notes by title (partial match, case-insensitive)
+- [ ] Search results update as the user types (debounced)
+- [ ] User can filter notes by one or more labels
+- [ ] Search and label filters can be combined
+- [ ] Clear button to reset search and filters
+- [ ] Empty state shown when no results match
+
+### Search Details
+
+- [ ] Search input with search icon (magnifying glass)
+- [ ] Placeholder text: "Search notes..."
+- [ ] Searches note titles (not full content in MVP)
+- [ ] Minimum 2 characters before search triggers
+- [ ] Debounce delay of 300ms to avoid excessive API calls
+- [ ] Search term highlighted in results (optional enhancement)
+
+### Label Filter Details
+
+- [ ] Label filter dropdown/chips next to or below search bar
+- [ ] Shows all available labels
+- [ ] User can select multiple labels (OR logic: notes with any selected label)
+- [ ] Selected labels shown as chips that can be dismissed
+- [ ] Label count shown next to each label option (e.g., "Work (5)")
+
+### UI Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔍 Search notes...                    [Grid] [List] [A-Z]  │
+├─────────────────────────────────────────────────────────────┤
+│  Labels: [Work ×] [1:1s ×]  [+ Add filter]                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  [Note cards or list...]                                    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Technical Notes
+
+- Use PrimeNG InputText with icon for search
+- Use PrimeNG MultiSelect or Chips for label filter
+- Client-side filtering for MVP (API filtering for scale)
+- Combine with existing sort (by updatedAt)
+- Works in both Grid and List views
+- GET /api/notes?search=term&labels=id1,id2 for API filtering

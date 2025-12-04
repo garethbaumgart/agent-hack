@@ -23,7 +23,7 @@ public class TasksController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}/status")]
-    public async Task<ActionResult<TaskDto>> UpdateStatus(Guid id, [FromBody] UpdateTaskStatusRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<UpdateTaskStatusResult>> UpdateStatus(Guid id, [FromBody] UpdateTaskStatusRequest request, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new UpdateTaskStatusCommand { Id = id, Status = request.Status }, cancellationToken);
         if (result == null) return NotFound();
@@ -31,7 +31,7 @@ public class TasksController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<TaskDto>> Update(Guid id, [FromBody] UpdateTaskRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<UpdateTaskTitleResult>> Update(Guid id, [FromBody] UpdateTaskRequest request, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new UpdateTaskCommand { Id = id, Title = request.Title }, cancellationToken);
         if (result == null) return NotFound();
@@ -39,7 +39,7 @@ public class TasksController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}/due-date")]
-    public async Task<ActionResult<TaskDto>> UpdateDueDate(Guid id, [FromBody] UpdateTaskDueDateRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<UpdateTaskDueDateResult>> UpdateDueDate(Guid id, [FromBody] UpdateTaskDueDateRequest request, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new UpdateTaskDueDateCommand { Id = id, DueDate = request.DueDate }, cancellationToken);
         if (result == null) return NotFound();

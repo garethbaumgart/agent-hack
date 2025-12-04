@@ -19,3 +19,8 @@ export interface UpdateNoteRequest {
   id: string;
   content: string;
 }
+
+export interface UpdateNoteResult {
+  note: Note;
+  updatedContent: string;
+}

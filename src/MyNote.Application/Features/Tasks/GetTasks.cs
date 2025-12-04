@@ -24,6 +24,7 @@ public class GetTasksHandler(IApplicationDbContext context) : IRequestHandler<Ge
                 CompletedAt = t.CompletedAt,
                 DueDate = t.DueDate,
                 NoteId = t.NoteId,
+                CheckboxId = t.CheckboxId,
                 Labels = t.TaskLabels.Select(tl => new TaskLabelDto
                 {
                     Id = tl.Label.Id,

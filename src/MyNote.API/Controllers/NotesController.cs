@@ -30,7 +30,7 @@ public class NotesController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<NoteDto>> Update(Guid id, [FromBody] UpdateNoteCommand command, CancellationToken cancellationToken)
+    public async Task<ActionResult<UpdateNoteResult>> Update(Guid id, [FromBody] UpdateNoteCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id)
             return BadRequest();

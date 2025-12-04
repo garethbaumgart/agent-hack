@@ -11,5 +11,6 @@ public class TaskItem
     public DateTime? DueDate { get; set; }
     public Guid? NoteId { get; set; }
     public Note? Note { get; set; }
+    public string? CheckboxId { get; set; } // Unique ID linking to checkbox in note content
     public ICollection<TaskLabel> TaskLabels { get; set; } = new List<TaskLabel>();
 }

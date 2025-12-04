@@ -19,6 +19,7 @@ public record TaskDto
     public DateTime? CompletedAt { get; init; }
     public DateTime? DueDate { get; init; }
     public Guid? NoteId { get; init; }
+    public string? CheckboxId { get; init; }
     public List<TaskLabelDto> Labels { get; init; } = new();
 }
 

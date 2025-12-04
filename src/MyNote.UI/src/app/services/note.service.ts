@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Note, CreateNoteRequest, UpdateNoteRequest } from '../models/note.model';
+import { Note, CreateNoteRequest, UpdateNoteRequest, UpdateNoteResult } from '../models/note.model';
 
 @Injectable({ providedIn: 'root' })
 export class NoteService {
@@ -26,10 +26,10 @@ export class NoteService {
     return note;
   }
 
-  async updateNote(request: UpdateNoteRequest): Promise<Note> {
-    const note = await firstValueFrom(this.http.put<Note>(`${this.apiUrl}/${request.id}`, request));
-    this.notesSignal.update(notes => notes.map(n => n.id === note.id ? note : n));
-    return note;
+  async updateNote(request: UpdateNoteRequest): Promise<UpdateNoteResult> {
+    const result = await firstValueFrom(this.http.put<UpdateNoteResult>(`${this.apiUrl}/${request.id}`, request));
+    this.notesSignal.update(notes => notes.map(n => n.id === result.note.id ? result.note : n));
+    return result;
   }
 
   async deleteNote(id: string): Promise<void> {

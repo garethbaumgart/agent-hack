@@ -6,6 +6,9 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
+import TaskList from '@tiptap/extension-task-list';
+import { TaskItemWithMeta } from './task-item-extension';
+import { SlashCommands } from './slash-commands.extension';
 import { TiptapEditorDirective } from 'ngx-tiptap';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { NoteService } from '../../services/note.service';
@@ -148,6 +151,20 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
                 <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path>
               </svg>
             </button>
+            <button
+              class="p-2 rounded hover:bg-gray-100 transition-colors"
+              [class.bg-gray-100]="editor.isActive('taskList')"
+              (click)="editor.chain().focus().toggleTaskList().run()"
+              title="Task List"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="5" width="4" height="4" rx="1"></rect>
+                <line x1="10" y1="7" x2="21" y2="7"></line>
+                <rect x="3" y="15" width="4" height="4" rx="1"></rect>
+                <line x1="10" y1="17" x2="21" y2="17"></line>
+              </svg>
+            </button>
+            <div class="w-px h-4 bg-gray-200 mx-1"></div>
             <button
               class="p-2 rounded hover:bg-gray-100 transition-colors"
               [class.bg-gray-100]="editor.isActive('codeBlock')"
@@ -378,6 +395,49 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
     :host ::ng-deep .tiptap a:hover {
       color: #1d4ed8;
     }
+
+    /* Task List Styles */
+    :host ::ng-deep .tiptap ul[data-type="taskList"] {
+      list-style: none;
+      padding: 0;
+      margin: 0.5em 0;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin: 0.25em 0;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li > label {
+      flex-shrink: 0;
+      margin-top: 0.2em;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+      width: 1.1em;
+      height: 1.1em;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li > div {
+      flex: 1;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li[data-checked="true"] > div p {
+      margin: 0;
+    }
+
+    :host ::ng-deep .tiptap ul[data-type="taskList"] li > div p {
+      margin: 0;
+    }
   `]
 })
 export class NoteEditorComponent implements OnInit, OnDestroy {
@@ -433,7 +493,15 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
           HTMLAttributes: {
             class: 'text-blue-600 underline'
           }
-        })
+        }),
+        TaskList,
+        TaskItemWithMeta.configure({
+          nested: true,
+          HTMLAttributes: {
+            class: 'task-item'
+          }
+        }),
+        SlashCommands
       ],
       content: note.content || '',
       editorProps: {
@@ -469,11 +537,24 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
     this.lastSaved.set(false);
 
     try {
-      const updated = await this.noteService.updateNote({
+      const result = await this.noteService.updateNote({
         id: currentNote.id,
         content
       });
-      this.note.set(updated);
+      this.note.set(result.note);
+
+      // If the content was updated with task IDs, update the editor
+      if (result.updatedContent !== content) {
+        const selection = this.editor.state.selection;
+        this.editor.commands.setContent(result.updatedContent, { emitUpdate: false });
+        // Try to restore cursor position
+        try {
+          this.editor.commands.setTextSelection(selection.anchor);
+        } catch {
+          // Ignore if position is invalid
+        }
+      }
+
       this.lastSaved.set(true);
     } finally {
       this.isSaving.set(false);

@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Task, CreateTaskRequest } from '../models/task.model';
+import { Task, CreateTaskRequest, UpdateTaskStatusResult, UpdateTaskDueDateResult } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -22,10 +22,10 @@ export class TaskService {
     return task;
   }
 
-  async updateTaskStatus(id: string, status: 'todo' | 'done'): Promise<Task> {
-    const task = await firstValueFrom(this.http.put<Task>(`${this.apiUrl}/${id}/status`, { status }));
-    this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? task : t));
-    return task;
+  async updateTaskStatus(id: string, status: 'todo' | 'done'): Promise<UpdateTaskStatusResult> {
+    const result = await firstValueFrom(this.http.put<UpdateTaskStatusResult>(`${this.apiUrl}/${id}/status`, { status }));
+    this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? result.task : t));
+    return result;
   }
 
   async updateTaskTitle(id: string, title: string): Promise<Task> {
@@ -34,10 +34,10 @@ export class TaskService {
     return task;
   }
 
-  async updateTaskDueDate(id: string, dueDate: string | null): Promise<Task> {
-    const task = await firstValueFrom(this.http.put<Task>(`${this.apiUrl}/${id}/due-date`, { dueDate }));
-    this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? task : t));
-    return task;
+  async updateTaskDueDate(id: string, dueDate: string | null): Promise<UpdateTaskDueDateResult> {
+    const result = await firstValueFrom(this.http.put<UpdateTaskDueDateResult>(`${this.apiUrl}/${id}/due-date`, { dueDate }));
+    this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? result.task : t));
+    return result;
   }
 
   async deleteTask(id: string): Promise<void> {
