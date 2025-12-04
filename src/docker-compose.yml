@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mynote-postgres
+    environment:
+      POSTGRES_DB: mynote
+      POSTGRES_USER: mynote
+      POSTGRES_PASSWORD: mynote123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mynote -d mynote"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: MyNote.API/Dockerfile
+    container_name: mynote-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=mynote;Username=mynote;Password=mynote123
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ui:
+    build:
+      context: MyNote.UI
+      dockerfile: Dockerfile
+    container_name: mynote-ui
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

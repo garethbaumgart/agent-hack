@@ -2,11 +2,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Note, CreateNoteRequest, UpdateNoteRequest, UpdateNoteResult } from '../models/note.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class NoteService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5275/api/notes';
+  private readonly apiUrl = `${environment.apiUrl}/notes`;
 
   private notesSignal = signal<Note[]>([]);
   notes = this.notesSignal.asReadonly();

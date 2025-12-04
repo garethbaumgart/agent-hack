@@ -1,0 +1,17 @@
+# Node
+**/node_modules
+**/dist
+**/.angular
+
+# .NET
+**/bin
+**/obj
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.md

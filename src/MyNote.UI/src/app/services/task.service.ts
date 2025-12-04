@@ -2,11 +2,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Task, CreateTaskRequest, UpdateTaskStatusResult, UpdateTaskDueDateResult } from '../models/task.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5275/api/tasks';
+  private readonly apiUrl = `${environment.apiUrl}/tasks`;
 
   private tasksSignal = signal<Task[]>([]);
   tasks = this.tasksSignal.asReadonly();

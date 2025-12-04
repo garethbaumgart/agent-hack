@@ -2,11 +2,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Label, LabelDetails } from '../models/label.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class LabelService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5275/api/labels';
+  private readonly apiUrl = `${environment.apiUrl}/labels`;
 
   private labelsSignal = signal<Label[]>([]);
   labels = this.labelsSignal.asReadonly();
