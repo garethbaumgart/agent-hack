@@ -53,6 +53,14 @@ public class TasksController(IMediator mediator) : ControllerBase
         if (!result) return NotFound();
         return NoContent();
     }
+
+    [HttpPost("from-note/{noteId:guid}")]
+    public async Task<ActionResult<TaskDto>> CreateFromNote(Guid noteId, [FromBody] CreateTaskFromNoteRequest request, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new CreateTaskFromNoteCommand { NoteId = noteId, Title = request.Title }, cancellationToken);
+        if (result == null) return NotFound();
+        return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
+    }
 }
 
 public record UpdateTaskStatusRequest
@@ -68,4 +76,9 @@ public record UpdateTaskRequest
 public record UpdateTaskDueDateRequest
 {
     public DateTime? DueDate { get; init; }
+}
+
+public record CreateTaskFromNoteRequest
+{
+    public string Title { get; init; } = string.Empty;
 }
