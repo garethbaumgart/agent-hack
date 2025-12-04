@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Label } from '../models/label.model';
+import { Label, LabelDetails } from '../models/label.model';
 
 @Injectable({ providedIn: 'root' })
 export class LabelService {
@@ -42,6 +42,12 @@ export class LabelService {
   async removeLabelFromTask(taskId: string, labelId: string): Promise<void> {
     await firstValueFrom(
       this.http.delete(`${this.apiUrl}/tasks/${taskId}/${labelId}`)
+    );
+  }
+
+  async getLabelDetails(labelId: string): Promise<LabelDetails> {
+    return await firstValueFrom(
+      this.http.get<LabelDetails>(`${this.apiUrl}/${labelId}`)
     );
   }
 }

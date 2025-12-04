@@ -27,5 +27,10 @@ export const routes: Routes = [
     path: 'notes/:id',
     loadComponent: () =>
       import('./features/notes/note-editor.component').then(m => m.NoteEditorComponent)
+  },
+  {
+    path: 'labels/:id',
+    loadComponent: () =>
+      import('./features/labels/label-view.component').then(m => m.LabelViewComponent)
   }
 ];

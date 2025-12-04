@@ -163,7 +163,10 @@ import { type Task } from '../../models/task.model';
                         <div class="flex flex-wrap items-center gap-1 mt-2">
                           @for (label of task.labels; track label.id) {
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
-                              {{ label.name }}
+                              <button
+                                (click)="navigateToLabel(label.id); $event.stopPropagation()"
+                                class="hover:underline"
+                              >{{ label.name }}</button>
                               <button
                                 (click)="removeTaskLabel(task, label.id); $event.stopPropagation()"
                                 class="hover:text-blue-900"
@@ -484,5 +487,9 @@ export class BoardComponent implements OnInit {
 
   clearLabelFilter(): void {
     this.selectedLabelFilter.set('');
+  }
+
+  navigateToLabel(labelId: string): void {
+    this.router.navigate(['/labels', labelId]);
   }
 }

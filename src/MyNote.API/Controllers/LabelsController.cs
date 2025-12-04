@@ -15,6 +15,14 @@ public class LabelsController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<LabelDetailsDto>> GetDetails(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetLabelDetailsQuery { LabelId = id }, cancellationToken);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
     [HttpGet("notes/{noteId:guid}")]
     public async Task<ActionResult<List<LabelDto>>> GetNoteLabels(Guid noteId, CancellationToken cancellationToken)
     {

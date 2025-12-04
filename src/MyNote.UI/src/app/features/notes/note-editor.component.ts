@@ -177,7 +177,10 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
           <!-- Existing Labels -->
           @for (label of note()?.labels || []; track label.id) {
             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-              {{ label.name }}
+              <button
+                class="hover:underline"
+                (click)="navigateToLabel(label.id)"
+              >{{ label.name }}</button>
               <button
                 class="hover:text-red-600 transition-colors"
                 (click)="removeLabel(label.id)"
@@ -545,5 +548,9 @@ export class NoteEditorComponent implements OnInit, OnDestroy {
         labels: n.labels.filter(l => l.id !== labelId)
       };
     });
+  }
+
+  navigateToLabel(labelId: string): void {
+    this.router.navigate(['/labels', labelId]);
   }
 }
