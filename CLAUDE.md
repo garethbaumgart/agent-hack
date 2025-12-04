@@ -182,7 +182,7 @@ test('notes page matches design', async ({ page }) => {
 ```
 
 #### Playwright Test File Location
-- Tests location: `src/MyNote.UI/e2e/` or `tests/e2e/`
+- Tests location: `src/MyNote.UI/e2e/`
 - File naming: `{feature-name}.spec.ts` (e.g., `notes.spec.ts`)
 - Group related tests in describe blocks
 
@@ -218,7 +218,7 @@ For complex features, you'll reference all three. For a quick bug fix, you might
 
 ```bash
 # Backend API
-cd src/Web
+cd src/MyNote.API
 dotnet run
 
 # Frontend
@@ -235,6 +235,7 @@ ng test
 ng test --watch=false --code-coverage  # With coverage report
 
 # Run Playwright E2E tests (REQUIRED after any UI changes)
+# NOTE: First install Playwright: npm install -D @playwright/test && npx playwright install
 cd src/MyNote.UI
 npx playwright test
 npx playwright test --headed  # Run with browser visible
@@ -245,7 +246,7 @@ npx playwright test --update-snapshots  # Update visual regression baselines
 npx playwright test notes.spec.ts
 
 # Database migrations
-cd src/Web
+cd src/MyNote.API
 dotnet ef migrations add MigrationName
 dotnet ef database update
 ```
@@ -290,10 +291,10 @@ Ask these questions:
 - Services: PascalCase with Service suffix (e.g., `UserService`)
 
 ### File Locations
-- Backend: `src/Web/`
+- Backend: `src/MyNote.API/`
 - Frontend: `src/MyNote.UI/src/app/`
 - Backend Tests: `tests/`
-- Playwright Tests: `src/MyNote.UI/e2e/` or `tests/e2e/`
+- Playwright Tests: `src/MyNote.UI/e2e/`
 - Documentation: `documentation/`
 
 ### Test File Naming
@@ -304,5 +305,5 @@ Ask these questions:
 
 **Playwright Tests:**
 - Test file: `{feature-name}.spec.ts` (e.g., `notes.spec.ts`)
-- Location: `src/MyNote.UI/e2e/` or `tests/e2e/`
+- Location: `src/MyNote.UI/e2e/`
 - Group related tests in describe blocks
