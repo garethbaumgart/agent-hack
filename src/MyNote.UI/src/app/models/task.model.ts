@@ -5,6 +5,7 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
+  dueDate: string | null;
   noteId: string | null;
 }
 

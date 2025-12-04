@@ -37,6 +37,14 @@ public class TasksController(IMediator mediator) : ControllerBase
         if (result == null) return NotFound();
         return Ok(result);
     }
+
+    [HttpPut("{id:guid}/due-date")]
+    public async Task<ActionResult<TaskDto>> UpdateDueDate(Guid id, [FromBody] UpdateTaskDueDateRequest request, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new UpdateTaskDueDateCommand { Id = id, DueDate = request.DueDate }, cancellationToken);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
 }
 
 public record UpdateTaskStatusRequest
@@ -47,4 +55,9 @@ public record UpdateTaskStatusRequest
 public record UpdateTaskRequest
 {
     public string Title { get; init; } = string.Empty;
+}
+
+public record UpdateTaskDueDateRequest
+{
+    public DateTime? DueDate { get; init; }
 }

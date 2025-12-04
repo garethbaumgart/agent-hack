@@ -34,8 +34,25 @@ export class TaskService {
     return task;
   }
 
+  async updateTaskDueDate(id: string, dueDate: string | null): Promise<Task> {
+    const task = await firstValueFrom(this.http.put<Task>(`${this.apiUrl}/${id}/due-date`, { dueDate }));
+    this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? task : t));
+    return task;
+  }
+
   getTodoTasks(): Task[] {
-    return this.tasksSignal().filter(t => t.status === 'todo');
+    return this.tasksSignal()
+      .filter(t => t.status === 'todo')
+      .sort((a, b) => {
+        // Tasks with due dates come first, sorted by due date
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        // Tasks without due dates sorted by creation date (newest first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
   }
 
   getDoneTasks(): Task[] {

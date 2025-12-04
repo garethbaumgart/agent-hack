@@ -31,6 +31,7 @@ public class UpdateTaskStatusHandler(IApplicationDbContext context) : IRequestHa
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
             CompletedAt = task.CompletedAt,
+            DueDate = task.DueDate,
             NoteId = task.NoteId
         };
     }

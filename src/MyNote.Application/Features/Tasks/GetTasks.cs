@@ -20,6 +20,7 @@ public class GetTasksHandler(IApplicationDbContext context) : IRequestHandler<Ge
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
                 CompletedAt = t.CompletedAt,
+                DueDate = t.DueDate,
                 NoteId = t.NoteId
             })
             .ToListAsync(cancellationToken);

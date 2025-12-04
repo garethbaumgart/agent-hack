@@ -4,20 +4,20 @@ using MyNote.Application.Common.Interfaces;
 
 namespace MyNote.Application.Features.Tasks;
 
-public record UpdateTaskCommand : IRequest<TaskDto?>
+public record UpdateTaskDueDateCommand : IRequest<TaskDto?>
 {
     public Guid Id { get; init; }
-    public string Title { get; init; } = string.Empty;
+    public DateTime? DueDate { get; init; }
 }
 
-public class UpdateTaskHandler(IApplicationDbContext context) : IRequestHandler<UpdateTaskCommand, TaskDto?>
+public class UpdateTaskDueDateHandler(IApplicationDbContext context) : IRequestHandler<UpdateTaskDueDateCommand, TaskDto?>
 {
-    public async Task<TaskDto?> Handle(UpdateTaskCommand request, CancellationToken cancellationToken)
+    public async Task<TaskDto?> Handle(UpdateTaskDueDateCommand request, CancellationToken cancellationToken)
     {
         var task = await context.Tasks.FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
         if (task == null) return null;
 
-        task.Title = request.Title;
+        task.DueDate = request.DueDate;
         task.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
