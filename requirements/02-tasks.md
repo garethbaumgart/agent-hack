@@ -110,7 +110,7 @@
 
 ---
 
-## US-32: In Progress Task Status
+## US-32: Add In Progress Task Status
 
 **As an** engineering manager
 **I want to** mark a task as "In Progress"

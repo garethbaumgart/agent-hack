@@ -15,7 +15,7 @@ Use this workflow when:
 
 **Always ask clarifying questions before starting implementation.**
 
-Review the user story and identify:
+Review the user story and identify questions about:
 
 | Question Type | Examples |
 |---------------|----------|
@@ -26,7 +26,20 @@ Review the user story and identify:
 | **UI/UX Details** | "Should there be a loading spinner while fetching?" |
 | **Scope** | "The technical notes mention future enhancements - are those in scope?" |
 
-**Do NOT proceed until the user confirms there are no questions or answers them.**
+**IMPORTANT: Ask ONE question at a time.**
+
+- Ask your first/most important question
+- Wait for the user's answer
+- Then ask the next question
+- Repeat until all questions are answered
+
+This approach:
+- Keeps the conversation focused
+- Allows for follow-up questions based on answers
+- Reduces overwhelm for the user
+- Ensures each answer is clear before moving on
+
+**Do NOT proceed until all questions are answered.**
 
 If the user story is clear and complete, confirm with: "I've reviewed US-XX and the requirements are clear. Ready to proceed?"
 
@@ -124,15 +137,21 @@ git push
 ```
 User: Implement US-29
 
-Claude: I've reviewed US-29: Toggle Grid and List View. Before I start, I have a few questions:
+Claude: I've reviewed US-29: Toggle Grid and List View.
 
-1. For the Grid View, should cards have a hover effect or selection state?
-2. Should the view toggle animate the transition or switch instantly?
-3. The AC mentions "persisted preference" - should this survive browser clear (use backend) or just localStorage?
+First question: For the Grid View, should cards have a hover effect or selection state?
 
-User: 1. Subtle hover effect, 2. Instant switch, 3. localStorage is fine
+User: Subtle hover effect
 
-Claude: Thanks! I'm updating US-29 with these clarifications so they're documented...
+Claude: Got it. Next question: Should the view toggle animate the transition or switch instantly?
+
+User: Instant switch
+
+Claude: Thanks. Final question: The AC mentions "persisted preference" - should this survive browser clear (use backend) or just localStorage?
+
+User: localStorage is fine
+
+Claude: All clarifications received. I'm updating US-29 with these details...
 
 ✓ Updated requirements/01-notes.md with:
   - Cards have subtle hover effect
