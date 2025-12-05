@@ -29,9 +29,30 @@ public class UpdateTaskStatusHandler(IApplicationDbContext context) : IRequestHa
 
         if (task == null) return null;
 
-        task.Status = request.Status;
+        var previousStatus = task.Status;
+        var newStatus = request.Status;
+
+        task.Status = newStatus;
         task.UpdatedAt = DateTime.UtcNow;
-        task.CompletedAt = request.Status == "done" ? DateTime.UtcNow : null;
+
+        // Handle timestamp changes based on status transitions (US-32)
+        switch (newStatus)
+        {
+            case "todo":
+                // Moving to todo clears both timestamps
+                task.StartedAt = null;
+                task.CompletedAt = null;
+                break;
+            case "in_progress":
+                // Moving to in_progress: set started_at only if not already set (preserve original)
+                task.StartedAt ??= DateTime.UtcNow;
+                task.CompletedAt = null;
+                break;
+            case "done":
+                // Moving to done: set completed_at, keep started_at
+                task.CompletedAt = DateTime.UtcNow;
+                break;
+        }
 
         string? updatedNoteContent = null;
 
@@ -41,7 +62,7 @@ public class UpdateTaskStatusHandler(IApplicationDbContext context) : IRequestHa
             var note = await context.Notes.FirstOrDefaultAsync(n => n.Id == task.NoteId, cancellationToken);
             if (note != null)
             {
-                var isChecked = request.Status == "done";
+                var isChecked = newStatus == "done";
                 updatedNoteContent = CheckboxParser.UpdateCheckboxCheckedState(note.Content, task.CheckboxId, isChecked);
                 note.Content = updatedNoteContent;
                 note.UpdatedAt = DateTime.UtcNow;
@@ -59,6 +80,7 @@ public class UpdateTaskStatusHandler(IApplicationDbContext context) : IRequestHa
                 Status = task.Status,
                 CreatedAt = task.CreatedAt,
                 UpdatedAt = task.UpdatedAt,
+                StartedAt = task.StartedAt,
                 CompletedAt = task.CompletedAt,
                 DueDate = task.DueDate,
                 NoteId = task.NoteId,

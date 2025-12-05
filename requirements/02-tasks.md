@@ -149,3 +149,10 @@
 - PUT /api/tasks/{id}/status endpoint accepts { status: "todo" | "in_progress" | "done" }
 - Use PrimeNG DragDrop or native HTML5 drag-and-drop for column transitions
 - Checkbox toggle on task card only toggles between current status and done (does not cycle through all statuses)
+
+### Clarifications
+
+- Use PrimeNG DragDrop module for drag-and-drop (not Angular CDK)
+- Checkbox unchecking always reverts task to Todo (not back to previous status)
+- When dragging Done → In Progress: preserve original started_at if it exists
+- In Progress column sorting: newest first (most recently started at top, descending)

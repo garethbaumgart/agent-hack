@@ -3,12 +3,15 @@ export interface TaskLabel {
   name: string;
 }
 
+export type TaskStatus = 'todo' | 'in_progress' | 'done';
+
 export interface Task {
   id: string;
   title: string;
-  status: 'todo' | 'done';
+  status: TaskStatus;
   createdAt: string;
   updatedAt: string;
+  startedAt: string | null;
   completedAt: string | null;
   dueDate: string | null;
   noteId: string | null;

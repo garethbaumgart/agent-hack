@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, Subject } from 'rxjs';
-import { Task, CreateTaskRequest, UpdateTaskStatusResult, UpdateTaskDueDateResult } from '../models/task.model';
+import { Task, TaskStatus, CreateTaskRequest, UpdateTaskStatusResult, UpdateTaskDueDateResult } from '../models/task.model';
 import { environment } from '../../environments/environment';
 
 export interface NoteContentUpdate {
@@ -34,7 +34,7 @@ export class TaskService {
     return task;
   }
 
-  async updateTaskStatus(id: string, status: 'todo' | 'done'): Promise<UpdateTaskStatusResult> {
+  async updateTaskStatus(id: string, status: TaskStatus): Promise<UpdateTaskStatusResult> {
     const result = await firstValueFrom(this.http.put<UpdateTaskStatusResult>(`${this.apiUrl}/${id}/status`, { status }));
     this.tasksSignal.update(tasks => tasks.map(t => t.id === id ? result.task : t));
 
@@ -78,6 +78,20 @@ export class TaskService {
         if (b.dueDate) return 1;
         // Tasks without due dates sorted by creation date (newest first)
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }
+
+  getInProgressTasks(): Task[] {
+    return this.tasksSignal()
+      .filter(t => t.status === 'in_progress')
+      .sort((a, b) => {
+        // Sort by started_at (most recently started first - newest at top)
+        if (a.startedAt && b.startedAt) {
+          return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+        }
+        if (a.startedAt) return -1;
+        if (b.startedAt) return 1;
+        return 0;
       });
   }
 

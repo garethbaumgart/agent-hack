@@ -55,6 +55,7 @@ public class CreateTaskFromNoteHandler(IApplicationDbContext context) : IRequest
             Status = task.Status,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
+            StartedAt = task.StartedAt,
             CompletedAt = task.CompletedAt,
             DueDate = task.DueDate,
             NoteId = task.NoteId,

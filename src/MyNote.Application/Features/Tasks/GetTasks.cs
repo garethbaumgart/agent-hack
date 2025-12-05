@@ -21,6 +21,7 @@ public class GetTasksHandler(IApplicationDbContext context) : IRequestHandler<Ge
                 Status = t.Status,
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt,
+                StartedAt = t.StartedAt,
                 CompletedAt = t.CompletedAt,
                 DueDate = t.DueDate,
                 NoteId = t.NoteId,

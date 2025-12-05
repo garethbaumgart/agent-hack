@@ -16,6 +16,7 @@ public record TaskDto
     public string Status { get; init; } = "todo";
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
+    public DateTime? StartedAt { get; init; }
     public DateTime? CompletedAt { get; init; }
     public DateTime? DueDate { get; init; }
     public Guid? NoteId { get; init; }
@@ -52,6 +53,7 @@ public class CreateTaskHandler(IApplicationDbContext context) : IRequestHandler<
             Status = task.Status,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
+            StartedAt = task.StartedAt,
             CompletedAt = task.CompletedAt,
             DueDate = task.DueDate,
             NoteId = task.NoteId

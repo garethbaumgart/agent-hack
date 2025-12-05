@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TaskService } from '../../services/task.service';
 import { LabelService } from '../../services/label.service';
-import { type Task } from '../../models/task.model';
+import { type Task, type TaskStatus } from '../../models/task.model';
 import { Select } from 'primeng/select';
+import { Draggable, Droppable } from 'primeng/dragdrop';
 
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [CommonModule, FormsModule, Select],
+  imports: [CommonModule, FormsModule, Select, Draggable, Droppable],
   template: `
     <div class="h-full bg-gray-50">
       <!-- Header -->
@@ -43,7 +44,13 @@ import { Select } from 'primeng/select';
         <div class="flex gap-6">
           <!-- Todo Column -->
           <div class="w-80 flex-shrink-0">
-            <div class="bg-gray-100 rounded-lg p-4">
+            <div
+              class="bg-gray-100 rounded-lg p-4 min-h-[200px]"
+              pDroppable="tasks"
+              (onDrop)="onDropToTodo()"
+              [class.ring-2]="draggedTask() !== null"
+              [class.ring-blue-400]="draggedTask() !== null"
+            >
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Todo
@@ -77,7 +84,12 @@ import { Select } from 'primeng/select';
               <!-- Task Cards -->
               <div class="space-y-2">
                 @for (task of todoTasks(); track task.id) {
-                  <div class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow relative">
+                  <div
+                    pDraggable="tasks"
+                    (onDragStart)="onDragStart(task)"
+                    (onDragEnd)="onDragEnd()"
+                    class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm hover:shadow transition-shadow relative cursor-move"
+                  >
                     <button
                       (click)="deleteTask(task)"
                       class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
@@ -211,9 +223,130 @@ import { Select } from 'primeng/select';
             </div>
           </div>
 
-          <!-- Done Column (for future US-06) -->
+          <!-- In Progress Column -->
           <div class="w-80 flex-shrink-0">
-            <div class="bg-gray-100 rounded-lg p-4">
+            <div
+              class="bg-blue-50 rounded-lg p-4 min-h-[200px]"
+              pDroppable="tasks"
+              (onDrop)="onDropToInProgress()"
+              [class.ring-2]="draggedTask() !== null"
+              [class.ring-blue-400]="draggedTask() !== null"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-blue-700 uppercase tracking-wide">
+                  In Progress
+                  <span class="ml-2 text-blue-400">({{ inProgressTasks().length }})</span>
+                </h2>
+              </div>
+
+              <!-- Task Cards -->
+              <div class="space-y-2">
+                @for (task of inProgressTasks(); track task.id) {
+                  <div
+                    pDraggable="tasks"
+                    (onDragStart)="onDragStart(task)"
+                    (onDragEnd)="onDragEnd()"
+                    class="group bg-white rounded-lg border border-blue-200 p-3 shadow-sm hover:shadow transition-shadow relative cursor-move"
+                  >
+                    <button
+                      (click)="deleteTask(task)"
+                      class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                      title="Delete task"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                    <div class="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        [checked]="false"
+                        (change)="toggleTaskStatus(task)"
+                        class="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                      />
+                      <div class="flex-1 min-w-0 pr-4">
+                        <div class="flex items-center gap-1">
+                          @if (task.noteId) {
+                            <button
+                              (click)="navigateToNote(task.noteId!); $event.stopPropagation()"
+                              class="text-gray-400 hover:text-blue-600 flex-shrink-0 transition-colors"
+                              title="View source note"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                              </svg>
+                            </button>
+                          }
+                          @if (editingTaskId() === task.id) {
+                            <input
+                              type="text"
+                              [value]="editingTitle()"
+                              (input)="onEditInput($event)"
+                              (keyup.enter)="saveEdit(task)"
+                              (keyup.escape)="cancelEdit()"
+                              (blur)="saveEdit(task)"
+                              class="w-full text-sm text-gray-900 border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:border-gray-500"
+                            />
+                          } @else {
+                            <p
+                              class="text-sm text-gray-900 cursor-pointer hover:text-gray-600"
+                              (click)="startEdit(task)"
+                            >{{ task.title }}</p>
+                          }
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                          <p class="text-xs text-blue-500">
+                            Started {{ formatDate(task.startedAt!) }}
+                          </p>
+                          @if (task.dueDate) {
+                            <span
+                              class="text-xs px-1.5 py-0.5 rounded"
+                              [class.text-orange-600]="isDueSoon(task.dueDate)"
+                              [class.text-red-600]="isOverdue(task.dueDate)"
+                              [class.text-gray-400]="!isDueSoon(task.dueDate) && !isOverdue(task.dueDate)"
+                            >
+                              {{ formatDueDate(task.dueDate) }}
+                            </span>
+                          }
+                        </div>
+                        <!-- Labels -->
+                        <div class="flex flex-wrap items-center gap-1 mt-2">
+                          @for (label of task.labels; track label.id) {
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
+                              <button
+                                (click)="navigateToLabel(label.id); $event.stopPropagation()"
+                                class="hover:underline"
+                              >{{ label.name }}</button>
+                              <button
+                                (click)="removeTaskLabel(task, label.id); $event.stopPropagation()"
+                                class="hover:text-blue-900"
+                              >×</button>
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              @if (inProgressTasks().length === 0) {
+                <div class="text-center py-8 text-blue-400 text-sm">
+                  Drag tasks here to start working
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Done Column -->
+          <div class="w-80 flex-shrink-0">
+            <div
+              class="bg-gray-100 rounded-lg p-4 min-h-[200px]"
+              pDroppable="tasks"
+              (onDrop)="onDropToDone()"
+              [class.ring-2]="draggedTask() !== null"
+              [class.ring-blue-400]="draggedTask() !== null"
+            >
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Done
@@ -223,7 +356,12 @@ import { Select } from 'primeng/select';
 
               <div class="space-y-2">
                 @for (task of doneTasks(); track task.id) {
-                  <div class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60 relative">
+                  <div
+                    pDraggable="tasks"
+                    (onDragStart)="onDragStart(task)"
+                    (onDragEnd)="onDragEnd()"
+                    class="group bg-white rounded-lg border border-gray-200 p-3 shadow-sm opacity-60 relative cursor-move"
+                  >
                     <button
                       (click)="deleteTask(task)"
                       class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
@@ -303,10 +441,18 @@ export class BoardComponent implements OnInit {
   editingLabelTaskId = signal<string | null>(null);
   labelSearchTerm = signal('');
   selectedLabelFilter = signal<string>('');
+  draggedTask = signal<Task | null>(null);
 
   todoTasks = computed(() => {
     const filter = this.selectedLabelFilter();
     const tasks = this.taskService.getTodoTasks();
+    if (!filter) return tasks;
+    return tasks.filter(t => t.labels.some(l => l.id === filter));
+  });
+
+  inProgressTasks = computed(() => {
+    const filter = this.selectedLabelFilter();
+    const tasks = this.taskService.getInProgressTasks();
     if (!filter) return tasks;
     return tasks.filter(t => t.labels.some(l => l.id === filter));
   });
@@ -348,9 +494,44 @@ export class BoardComponent implements OnInit {
     this.newTaskTitle.set('');
   }
 
+  // Checkbox toggle: always toggles between current status and done
+  // Unchecking always reverts to todo (per clarification)
   async toggleTaskStatus(task: Task): Promise<void> {
-    const newStatus = task.status === 'todo' ? 'done' : 'todo';
+    const newStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done';
     await this.taskService.updateTaskStatus(task.id, newStatus);
+  }
+
+  // Drag and drop handlers
+  onDragStart(task: Task): void {
+    this.draggedTask.set(task);
+  }
+
+  onDragEnd(): void {
+    this.draggedTask.set(null);
+  }
+
+  async onDropToTodo(): Promise<void> {
+    const task = this.draggedTask();
+    if (task && task.status !== 'todo') {
+      await this.taskService.updateTaskStatus(task.id, 'todo');
+    }
+    this.draggedTask.set(null);
+  }
+
+  async onDropToInProgress(): Promise<void> {
+    const task = this.draggedTask();
+    if (task && task.status !== 'in_progress') {
+      await this.taskService.updateTaskStatus(task.id, 'in_progress');
+    }
+    this.draggedTask.set(null);
+  }
+
+  async onDropToDone(): Promise<void> {
+    const task = this.draggedTask();
+    if (task && task.status !== 'done') {
+      await this.taskService.updateTaskStatus(task.id, 'done');
+    }
+    this.draggedTask.set(null);
   }
 
   async deleteTask(task: Task): Promise<void> {

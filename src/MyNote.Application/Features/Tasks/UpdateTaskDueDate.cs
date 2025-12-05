@@ -59,6 +59,7 @@ public class UpdateTaskDueDateHandler(IApplicationDbContext context) : IRequestH
                 Status = task.Status,
                 CreatedAt = task.CreatedAt,
                 UpdatedAt = task.UpdatedAt,
+                StartedAt = task.StartedAt,
                 CompletedAt = task.CompletedAt,
                 DueDate = task.DueDate,
                 NoteId = task.NoteId,
