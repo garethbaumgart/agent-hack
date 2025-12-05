@@ -53,18 +53,24 @@ Every task knows where it came from. Click the link icon on any task to jump to 
 ## Getting Started
 
 ### Prerequisites
-- .NET 9 SDK
+- .NET 10 SDK
 - Node.js 20+
-- PostgreSQL 17 (or use Docker)
+- Docker (for PostgreSQL)
 
-### Run with Docker
+### Run with Docker (Recommended)
 ```bash
+cd src
 docker-compose up
 ```
+This starts PostgreSQL, the API, and the UI. Open [http://localhost](http://localhost) in your browser.
 
 ### Run Locally
 ```bash
-# Backend
+# Start PostgreSQL
+cd src
+docker-compose up postgres -d
+
+# Backend (separate terminal)
 cd src/MyNote.API
 dotnet run
 
@@ -80,7 +86,7 @@ Open [http://localhost:4200](http://localhost:4200) in your browser.
 
 ## Built With
 
-- **Backend**: .NET 9, Entity Framework Core, PostgreSQL
+- **Backend**: .NET 10, Entity Framework Core, PostgreSQL
 - **Frontend**: Angular 20, PrimeNG, Tailwind CSS
 - **Editor**: TipTap (rich text with task lists)
 
