@@ -52,6 +52,17 @@ Load relevant context based on your task:
 | **Domain** | Business decisions, user workflows, feature validation | `domain.md` |
 | **Architecture** | Technical design, code patterns, stack decisions | `architecture.md` |
 | **Quality** | Testing, deployment, definition of done | `quality.md` |
+| **User Story Workflow** | Implementing a user story from `requirements/` | `user-story-workflow.md` |
+
+### Executing User Stories
+
+When asked to implement a user story (e.g., "implement US-29" or "build the grid view feature"):
+
+1. **Load `user-story-workflow.md`** - Follow the complete workflow defined there
+2. **Always ask clarifying questions first** - Do not start coding until questions are answered
+3. **Commit with user story ID** - Use format `US-XX: Title` and push when complete
+
+See `user-story-workflow.md` for the full step-by-step process.
 
 ### How to Use Contexts
 
